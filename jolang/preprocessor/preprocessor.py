@@ -16,7 +16,7 @@ def preprocess(stream: typing.Iterator[tokens.Token]):
                             replace_with.append(tok)
                     newline = next(stream)
                     if not isinstance(newline, tokens.Newline):
-                        raise SyntaxError("A macro should be end with a newline [{}:{}]".format(macro.line, macro.col - 1))
+                        raise SyntaxError("A macro should be ended with a newline [{}:{}]".format(macro.line, macro.col - 1))
                     macros[replace.name, replace.content] = replace_with
             except StopIteration:
                 raise SyntaxError("A macro was never closed [line {}]".format(macro.line)) from None
