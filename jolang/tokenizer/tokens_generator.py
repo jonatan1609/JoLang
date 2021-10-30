@@ -68,10 +68,10 @@ def generate_tokens(
                     continue
                 n_group, token_type, comment = token.split(" ")
                 if comment and not int(n_group):
-                    tokens += f"{uppercase_to_camelcase(token_type)} = Token({token_type!r})  # {comment}\n"
+                    tokens += f"{uppercase_to_pascal_case(token_type)} = Token({token_type!r})  # {comment}\n"
                 elif comment and int(n_group):
-                    tokens += f"{uppercase_to_camelcase(token_type)} = Token({token_type!r}, {comment!r})\n"
-                    groups[int(n_group)][comment] = Repr(uppercase_to_camelcase(token_type))
+                    tokens += f"{uppercase_to_pascal_case(token_type)} = Token({token_type!r}, {comment!r})\n"
+                    groups[int(n_group)][comment] = Repr(uppercase_to_pascal_case(token_type))
         formatted_groups = f"\n\ngroups = {pformat(dict(groups), indent=0)}\n"
         gen_file.write(TEMPLATE.format(tokens, formatted_groups))
 
