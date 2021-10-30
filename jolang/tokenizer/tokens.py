@@ -27,6 +27,7 @@ class Token:
     __str__ = __repr__
 
 
+Macro = Token('MACRO')  # %macro a b
 Identifier = Token('IDENTIFIER')  # abc_def
 String = Token('STRING')  # "abc_def"
 Integer = Token('INTEGER')  # 123
