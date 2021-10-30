@@ -20,7 +20,10 @@ class Token:
         if self.content:
             content = f":{self.content!r}"
         return f"{self.name}{content}"
-
+    
+    def __instancecheck__(self, instance: "Token") -> bool:
+        return self.name == instance.name
+   
     __str__ = __repr__
 
 
