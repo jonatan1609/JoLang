@@ -98,7 +98,6 @@ class Tokenizer:
                 self.advance()
                 if self.current_token and (three_tok := self._get_op_three_chars(two_tok)):
                     self.advance()
-            print([col], tok)
             self.col = col
         return three_tok or two_tok or tok
 
