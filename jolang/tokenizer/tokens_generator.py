@@ -49,7 +49,7 @@ class Repr(str):
         return str(self)
 
 
-def uppercase_to_camelcase(string: str) -> str:
+def uppercase_to_pascal_case(string: str) -> str:
     return "".join(chunk.title() for chunk in string.split("_"))
 
 
