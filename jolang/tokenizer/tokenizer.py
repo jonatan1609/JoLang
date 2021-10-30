@@ -54,6 +54,7 @@ class Tokenizer:
 
     def tokenize_number(self):
         number = ""
+        col = self.col
         while not self.is_eof() and self.current_token in string.ascii_letters + string.digits + '.':
             number += self.current_token
             self.advance()
@@ -64,6 +65,7 @@ class Tokenizer:
                 self.HEX_PATTERN
         ):
             if regex.fullmatch(number):
+                self.col = col
                 return self.map_re_to_tokens[regex](self, number)
         raise SyntaxError(f"Couldn't tokenize the number {number!r}")
 
@@ -89,13 +91,14 @@ class Tokenizer:
 
     def tokenize_op(self):
         three_tok = two_tok = None
+        col = self.col
         if tok := self._get_op_one_char():
             self.advance()
             if self.current_token and (two_tok := self._get_op_two_chars(tok)):
                 self.advance()
                 if self.current_token and (three_tok := self._get_op_three_chars(two_tok)):
                     self.advance()
-            self.col -= len((three_tok or two_tok or tok or tokens.String.set_content(0, 0, "")).value)
+            self.col = col
         return three_tok or two_tok or tok
 
     def tokenize(self):
@@ -107,7 +110,9 @@ class Tokenizer:
                     yield tokens.Newline
                 self.advance()
             elif self.current_token in string.digits:
-                yield self.tokenize_number()
+                number = self.tokenize_number()
+                self.col += len(number.content)
+                yield number
             elif self.current_token in string.ascii_letters + "_":
                 yield tokens.Identifier.set_content(self.line, self.col, "".join(self.tokenize_identifier()))
             else:
