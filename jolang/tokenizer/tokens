@@ -1,7 +1,7 @@
 # What does this file represent
 # number of chars in a particular token, name of the token, what does the token look like
 
-0 MACRO %macro a b
+0 NEWLINE \n
 0 IDENTIFIER abc_def
 0 STRING "abc_def"
 0 INTEGER 123

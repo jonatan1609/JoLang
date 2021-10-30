@@ -9,9 +9,11 @@ class Token:
         self.name = name
         self.value = value
         self.content = None
-
-    def set_content(self, content: typing.Any) -> "Token":
+        
+    def set_content(self, line: int, col: int, content: typing.Any = None) -> "Token":
         new_self = type(self)(self.name)
+        new_self.line = line
+        new_self.col = col
         new_self.content = content
         return new_self
         
@@ -27,7 +29,7 @@ class Token:
     __str__ = __repr__
 
 
-Macro = Token('MACRO')  # %macro a b
+Newline = Token('NEWLINE')  # \n
 Identifier = Token('IDENTIFIER')  # abc_def
 String = Token('STRING')  # "abc_def"
 Integer = Token('INTEGER')  # 123

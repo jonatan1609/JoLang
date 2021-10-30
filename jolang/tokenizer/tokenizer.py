@@ -104,6 +104,8 @@ class Tokenizer:
             if self.current_token in ['\'', '"']:
                 yield tokens.String.set_content("".join(self.tokenize_string()))
             elif self.current_token in string.whitespace:
+                if self.current_token == '\n':
+                    yield tokens.Newline
                 self.advance()
             elif self.current_token in string.digits:
                 yield self.tokenize_number()
