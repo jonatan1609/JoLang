@@ -69,7 +69,7 @@ def generate_tokens(
                 token = token.strip()
                 if not token or token.startswith('#'):
                     continue
-                n_group, token_type, comment = token.split(" ")
+                n_group, token_type, comment = token.split(" ", 2)
                 if comment and not int(n_group):
                     tokens += f"{uppercase_to_pascal_case(token_type)} = Token({token_type!r})  # {comment}\n"
                 elif comment and int(n_group):
