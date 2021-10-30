@@ -10,6 +10,7 @@ def preprocess(stream: typing.Iterator[tokens.Token]):
                 macro = next(stream)
                 if macro.content == "macro":
                     replace, replace_with = next(stream), [next(stream)]
+                    assert replace_with != [tokens.Newline]
                     if isinstance(replace_with[0], tokens.LeftParen):
                         replace_with.pop()
                         while not isinstance(tok := next(stream), tokens.RightParen):
@@ -20,8 +21,10 @@ def preprocess(stream: typing.Iterator[tokens.Token]):
                     macros[replace.name, replace.content] = replace_with
             except StopIteration:
                 raise SyntaxError("A macro was never closed [line {}]".format(macro.line)) from None
+            except AssertionError:
+                macros[replace.name, replace.content] = []
         else:
-            if macro := macros.get((token.name, token.content)):
+            if (macro := macros.get((token.name, token.content))) is not None:
                 yield from macro
             else:
                 yield token
