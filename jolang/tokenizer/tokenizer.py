@@ -21,11 +21,20 @@ class Tokenizer:
     def __init__(self, stream: str):
         self.tokens = TokenStream(stream)
         self.current_token = None
+        self.col = 0
+        self.line = 0
         self.advance()
+
+    def throw(self):
+        raise SyntaxError("Invalid syntax at {}:{} [{!r}]".format(self.line, self.col, self.current_token))
 
     def advance(self):
         try:
             self.current_token = next(self.tokens)
+            self.col += 1
+            if self.current_token == '\n':
+                self.col = 0
+                self.line += 1
         except StopIteration:
             self.current_token = None
         return self.current_token
@@ -106,4 +115,4 @@ class Tokenizer:
                         continue
                     yield op
                 else:
-                    raise SyntaxError(f"Invalid Syntax {self.current_token!r}")
+                    self.throw()
