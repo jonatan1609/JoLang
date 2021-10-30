@@ -109,6 +109,7 @@ class Tokenizer:
                 if self.current_token == '\n':
                     yield tokens.Newline
                 self.advance()
+                self.col = 0
             elif self.current_token in string.digits:
                 number = self.tokenize_number()
                 self.col += len(number.content)

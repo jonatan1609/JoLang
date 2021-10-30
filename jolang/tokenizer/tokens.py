@@ -5,6 +5,8 @@ import typing
 
 
 class Token:
+    col = line = 0
+    
     def __init__(self, name: str, value: str = None):
         self.name = name
         self.value = value
