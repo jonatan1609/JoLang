@@ -33,7 +33,6 @@ class Tokenizer:
             self.current_token = next(self.tokens)
             self.col += 1
             if self.current_token == '\n':
-                self.col = 0
                 self.line += 1
         except StopIteration:
             self.current_token = None
@@ -108,11 +107,11 @@ class Tokenizer:
             elif self.current_token in string.whitespace:
                 if self.current_token == '\n':
                     yield tokens.Newline
-                    self.col = 0
+                    self.col = -1
                 self.advance()
             elif self.current_token in string.digits:
                 number = self.tokenize_number()
-                self.col += len(number.content)
+                self.col += len(str(number.content))
                 yield number
             elif self.current_token in string.ascii_letters + "_":
                 yield tokens.Identifier.set_content(self.line, self.col, "".join(self.tokenize_identifier()))
@@ -121,6 +120,6 @@ class Tokenizer:
                     if op == tokens.Comment:
                         continue
                     yield op.set_content(self.line, self.col)
-                    self.col += len(op.value)
+                    self.col += len(str(op.value))
                 else:
                     self.throw()
