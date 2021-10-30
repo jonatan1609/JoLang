@@ -14,9 +14,11 @@ class Token:
         self.name = name
         self.value = value
         self.content = None
-
-    def set_content(self, content: typing.Any) -> "Token":
+        
+    def set_content(self, line: int, col: int, content: typing.Any = None) -> "Token":
         new_self = type(self)(self.name)
+        new_self.line = line
+        new_self.col = col
         new_self.content = content
         return new_self
         

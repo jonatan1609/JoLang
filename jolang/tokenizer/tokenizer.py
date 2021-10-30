@@ -12,16 +12,16 @@ class Tokenizer:
     OCTAL_PATTERN = re.compile(r"0o[0-7]+", re.IGNORECASE)
 
     map_re_to_tokens = {
-        INTEGER_PATTERN: lambda content: tokens.Integer.set_content(content),
-        FLOAT_PATTERN: lambda content: tokens.Float.set_content(content),
-        HEX_PATTERN: lambda content: tokens.Integer.set_content(int(content, 16)),
-        OCTAL_PATTERN: lambda content: tokens.Integer.set_content(int(content, 8))
+        INTEGER_PATTERN: lambda self, content: tokens.Integer.set_content(self.line, self.col, content),
+        FLOAT_PATTERN: lambda self, content: tokens.Float.set_content(self.line, self.col, content),
+        HEX_PATTERN: lambda self, content: tokens.Integer.set_content(self.line, self.col, int(content, 16)),
+        OCTAL_PATTERN: lambda self, content: tokens.Integer.set_content(self.line, self.col, int(content, 8))
     }
 
     def __init__(self, stream: str):
         self.tokens = TokenStream(stream)
         self.current_token = None
-        self.col = 0
+        self.col = -1
         self.line = 0
         self.advance()
 
@@ -64,7 +64,7 @@ class Tokenizer:
                 self.HEX_PATTERN
         ):
             if regex.fullmatch(number):
-                return self.map_re_to_tokens[regex](number)
+                return self.map_re_to_tokens[regex](self, number)
         raise SyntaxError(f"Couldn't tokenize the number {number!r}")
 
     def tokenize_identifier(self):
@@ -89,20 +89,19 @@ class Tokenizer:
 
     def tokenize_op(self):
         three_tok = two_tok = None
-
         if tok := self._get_op_one_char():
             self.advance()
             if self.current_token and (two_tok := self._get_op_two_chars(tok)):
                 self.advance()
                 if self.current_token and (three_tok := self._get_op_three_chars(two_tok)):
                     self.advance()
-
+            self.col -= len((three_tok or two_tok or tok or tokens.String.set_content(0, 0, "")).value)
         return three_tok or two_tok or tok
 
     def tokenize(self):
         while not self.is_eof():
             if self.current_token in ['\'', '"']:
-                yield tokens.String.set_content("".join(self.tokenize_string()))
+                yield tokens.String.set_content(self.line, self.col, "".join(self.tokenize_string()))
             elif self.current_token in string.whitespace:
                 if self.current_token == '\n':
                     yield tokens.Newline
@@ -110,11 +109,12 @@ class Tokenizer:
             elif self.current_token in string.digits:
                 yield self.tokenize_number()
             elif self.current_token in string.ascii_letters + "_":
-                yield tokens.Identifier.set_content("".join(self.tokenize_identifier()))
+                yield tokens.Identifier.set_content(self.line, self.col, "".join(self.tokenize_identifier()))
             else:
                 if op := self.tokenize_op():
                     if op == tokens.Comment:
                         continue
-                    yield op
+                    yield op.set_content(self.line, self.col)
+                    self.col += len(op.value)
                 else:
                     self.throw()
