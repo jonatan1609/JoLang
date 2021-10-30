@@ -98,6 +98,7 @@ class Tokenizer:
                 self.advance()
                 if self.current_token and (three_tok := self._get_op_three_chars(two_tok)):
                     self.advance()
+            print([col], tok)
             self.col = col
         return three_tok or two_tok or tok
 
@@ -108,8 +109,8 @@ class Tokenizer:
             elif self.current_token in string.whitespace:
                 if self.current_token == '\n':
                     yield tokens.Newline
+                    self.col = 0
                 self.advance()
-                self.col = 0
             elif self.current_token in string.digits:
                 number = self.tokenize_number()
                 self.col += len(number.content)
