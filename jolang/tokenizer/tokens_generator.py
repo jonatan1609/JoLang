@@ -83,4 +83,5 @@ def generate_tokens(
         gen_file.write(TEMPLATE.format(tokens, formatted_groups))
 
 
-generate_tokens()
+if __name__ == '__main__':
+    generate_tokens()
