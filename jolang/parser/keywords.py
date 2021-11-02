@@ -1,0 +1,5 @@
+keywords = [
+    "int",
+    "func",
+    "return"
+]
