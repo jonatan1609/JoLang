@@ -94,4 +94,4 @@ class Parser:
             if self.accept(tokens.Newline):
                 continue
             body.statements.append(self.parse_expr())
-        yield body
+        return body
