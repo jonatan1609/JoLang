@@ -16,30 +16,36 @@ class Ast:
         return f"{self.__class__.__name__}({self.format_args()})"
 
 
+class Operator(Ast):
+    def __init__(self):
+        pass
+
+
 class Node(Ast):
     def __init__(self, argument):
         self.argument = argument
 
 
 class BinaryNode(Ast):
-    def __init__(self, left, right):
+    def __init__(self, left, op, right):
         self.left = left
+        self.op = op
         self.right = right
 
 
-class Add(BinaryNode):
+class Add(Operator):
     pass
 
 
-class Subtract(BinaryNode):
+class Subtract(Operator):
     pass
 
 
-class Divide(BinaryNode):
+class Divide(Operator):
     pass
 
 
-class Multiply(BinaryNode):
+class Multiply(Operator):
     pass
 
 
@@ -71,7 +77,7 @@ class Constant(Node):
     pass
 
 
-class Modulo(BinaryNode):
+class Modulo(Operator):
     pass
 
 

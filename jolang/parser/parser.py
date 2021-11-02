@@ -67,11 +67,11 @@ class Parser:
         node = self.parse_atom()
         while True:
             if self.accept(tokens.Multiply):
-                node = ast.Multiply(left=node, right=self.parse_atom())
+                node = ast.BinaryNode(left=node, op=ast.Multiply(), right=self.parse_atom())
             elif self.accept(tokens.Divide):
-                node = ast.Divide(left=node, right=self.parse_atom())
+                node = ast.BinaryNode(left=node, op=ast.Divide(), right=self.parse_atom())
             elif self.accept(tokens.Modulo):
-                node = ast.Modulo(left=node, right=self.parse_atom())
+                node = ast.BinaryNode(left=node, op=ast.Modulo(), right=self.parse_atom())
             else:
                 break
         return node
@@ -81,9 +81,9 @@ class Parser:
         node = self.parse_term()
         while True:
             if self.accept(tokens.Add):
-                node = ast.Add(left=node, right=self.parse_term())
+                node = ast.BinaryNode(left=node, op=ast.Add(), right=self.parse_term())
             elif self.accept(tokens.Subtract):
-                node = ast.Subtract(left=node, right=self.parse_term())
+                node = ast.BinaryNode(left=node, op=ast.Subtract(), right=self.parse_term())
             else:
                 break
         return node
