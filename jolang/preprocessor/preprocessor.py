@@ -2,15 +2,16 @@ import typing
 from ..tokenizer import tokens
 
 
-def preprocess(stream: typing.Iterator[tokens.Token]):
-    macros = {}
+def preprocess(stream: typing.Iterator[tokens.Token], macros=None):
+    if not macros:
+        macros = {}
     for token in stream:
         if isinstance(token, tokens.Modulo) and not token.col:
             try:
                 macro = next(stream)
                 if macro.content == "macro":
                     replace, replace_with = next(stream), []
-                    while not isinstance(tok := next(stream), tokens.Newline):
+                    while not isinstance(tok := next(stream, tokens.Newline), tokens.Newline):
                         replace_with.append(tok)
                     macros[replace.name, replace.content] = replace_with
             except StopIteration:
@@ -20,3 +21,4 @@ def preprocess(stream: typing.Iterator[tokens.Token]):
                 yield from macro
             else:
                 yield token
+    yield macros

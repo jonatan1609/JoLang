@@ -10,6 +10,7 @@ Keyword = Token("KEYWORD")
 
 class Parser:
     def __init__(self, stream: typing.Iterable[Token]):
+        self.macros = {}
         self.tokens_stream = self.cast_identifier_to_keyword(stream)
         self.current_token: typing.Optional[Token] = None
         self.next_token: typing.Optional[Token] = None
@@ -21,9 +22,11 @@ class Parser:
     def is_eof(self) -> bool:
         return not self.next_token
 
-    @staticmethod
-    def cast_identifier_to_keyword(stream: typing.Iterable[Token]) -> typing.Generator[Token, None, None]:
+    def cast_identifier_to_keyword(self, stream: typing.Iterable[Token]) -> typing.Generator[Token, None, None]:
         for token in stream:
+            if isinstance(token, dict):
+                self.macros = token
+                continue
             if token.name == Identifier.name and token.content in keywords:
                 yield Keyword.set_content(token.line, token.col, token.content)
             else:
@@ -42,6 +45,8 @@ class Parser:
         # Expr | ({'~'|'-'|'+'|'!'}* Atom)
         if self.accept(tokens.Integer):
             return ast.Number(int(self.current_token.content))
+        elif self.accept(tokens.String):
+            return ast.String(self.current_token.content)
         elif self.accept(tokens.Identifier):
             return ast.Constant(self.current_token.content)
         elif self.accept(tokens.UnaryTilde):
