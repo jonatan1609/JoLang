@@ -48,6 +48,8 @@ class Parser:
         elif self.accept(tokens.String):
             return ast.String(self.current_token.content)
         elif self.accept(tokens.Identifier):
+            if self.current_token.content in ("jomama", "yomama"):
+                raise RuntimeError("Ayo! you found an easter egg")
             return ast.Constant(self.current_token.content)
         elif self.accept(tokens.UnaryTilde):
             return ast.UnaryTilde(self.parse_atom())
