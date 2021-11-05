@@ -1,8 +1,13 @@
+import platform
 import re
 
 from jolang.tokenizer import Tokenizer
 from jolang.preprocessor import preprocess
 from jolang.parser import Parser, ast
+
+print("JoLang Shell on {}".format(platform.platform()))
+print("Docs: https://jolang.org")
+print("Type exit or quit to close the shell")
 
 
 class Evaluate:
@@ -20,6 +25,18 @@ class Evaluate:
     @staticmethod
     def visit_number(node: ast.Number):
         return node.argument
+
+    def visit_unary_add(self, node: ast.UnaryAdd):
+        return +self._visit(node.argument)
+
+    def visit_unary_subtract(self, node: ast.UnarySubtract):
+        return -self._visit(node.argument)
+
+    def visit_unary_logical_not(self, node: ast.UnaryLogicalNot):
+        return not self._visit(node.argument)
+
+    def visit_unary_tilde(self, node: ast.UnaryTilde):
+        return ~self._visit(node.argument)
 
     def visit_constant(self, v: ast.Constant):
         var = self.variables.get(v.argument)
@@ -71,7 +88,7 @@ def main(code: str):
 try:
     while (command := input('JoLang >>> ')).lower() not in ('quit', 'exit'):
         res = main(command)
-        if res:
+        if res is not None:
             print(res)
 except KeyboardInterrupt:
     pass
