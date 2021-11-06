@@ -117,7 +117,7 @@ class Parser:
         return node
 
     def parse_statement(self):
-        # Assignment: Identifier '=' Expr
+        # Assignment: (Identifier '=' Expr) | Expr
         if self.accept(tokens.Identifier):
             const = ast.Constant(self.current_token.content)
             if self.accept(tokens.Equals):
@@ -125,8 +125,13 @@ class Parser:
                 if not expr:
                     self.throw(f"Expected an expression, got {self.current_token}")
                 return ast.Assignment(const, expr)
-            else:
-                return const
+            elif self.accept(tokens.LeftParen):
+                if self.accept(tokens.RightParen):
+                    return ast.Call(const, ast.Arguments([]))
+                args = self.parse_args()
+                if not self.accept(tokens.RightParen):
+                    raise SyntaxError
+                return ast.Call(const, args)
 
     def parse(self):
         body = ast.Body([])
