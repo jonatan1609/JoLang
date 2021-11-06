@@ -58,6 +58,11 @@ class Evaluate:
         if isinstance(node.op, ast.Modulo):
             return left % right
 
+    def visit_assignment(self, node: ast.Assignment):
+        name = node.const.argument
+        content = self._visit(node.content)
+        self.variables[name] = content
+
     def _visit(self, node):
         method = 'visit_' + self.pascal_case_to_snake_case(node.__class__.__name__)
         method = getattr(self, method)
@@ -66,6 +71,14 @@ class Evaluate:
     @staticmethod
     def visit_string(node):
         return node.argument
+
+    def visit_call(self, node: ast.Call):
+        func = self._visit(node.const)
+        args = self._visit(node.args)
+        return func(*args)
+
+    def visit_arguments(self, node: ast.Arguments):
+        return [self._visit(arg) for arg in node.items]
 
     def visit(self):
         if self.node.statements:
@@ -82,7 +95,7 @@ def main(code: str):
     parser = Parser(preprocessor)
     evaluator.node = parser.parse()
     evaluator.macros.update(parser.macros)
-    return evaluator.visit()
+    return evaluator.visit() or None
 
 
 try:
