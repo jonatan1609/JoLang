@@ -94,6 +94,22 @@ class Statement(Ast):
     pass
 
 
+class Arguments(Container):
+    pass
+
+
+class Call(Ast):
+    def __init__(self, const: Constant, args: Arguments):
+        self.const = const
+        self.args = args
+
+
 class Body(Ast):
     def __init__(self, statements: typing.List[Statement]):
         self.statements = statements
+
+
+class Assignment(Ast):
+    def __init__(self, const, content):
+        self.const = const
+        self.content = content

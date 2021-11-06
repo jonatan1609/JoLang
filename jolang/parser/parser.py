@@ -41,17 +41,20 @@ class Parser:
     def throw(self, message: str):
         raise SyntaxError(message + f" at line {self.next_token.line} column {self.next_token.col}")
 
-    def parse_atom(self):
-        # Expr | ({'~'|'-'|'+'|'!'}* Atom)
-        if self.accept(tokens.Integer):
+    def parse_literal(self):
+        # Literal: Digit | String | Identifier
+        if self.accept(tokens.Integer):  # Digit: '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'
             return ast.Number(int(self.current_token.content))
-        elif self.accept(tokens.String):
+        elif self.accept(tokens.String):  # String: ('"' {char} '"') | ("'" {char} "'")
             return ast.String(self.current_token.content)
-        elif self.accept(tokens.Identifier):
+        elif self.accept(tokens.Identifier):  # Identifier: (LowerCase | UpperCase | '_') Digit* Identifier*
             if self.current_token.content in ("jomama", "yomama"):
                 raise RuntimeError("Ayo! you found an easter egg")
             return ast.Constant(self.current_token.content)
-        elif self.accept(tokens.UnaryTilde):
+
+    def parse_atom(self):
+        # Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [Expr] ')' | Literal | FuncCall
+        if self.accept(tokens.UnaryTilde):
             return ast.UnaryTilde(self.parse_atom())
         elif self.accept(tokens.LogicNot):
             return ast.UnaryLogicalNot(self.parse_atom())
@@ -60,17 +63,35 @@ class Parser:
         elif self.accept(tokens.Subtract):
             return ast.UnarySubtract(self.parse_atom())
         elif self.accept(tokens.LeftParen):
+            if self.accept(tokens.RightParen):
+                return ast.Node(None)
             expr = self.parse_expr()
             if not self.accept(tokens.RightParen):
                 raise SyntaxError(f"Parenthesis were not closed at line {self.current_token.line}")
             return expr
+        elif literal := self.parse_literal():
+            if self.accept(tokens.LeftParen):
+                if self.accept(tokens.RightParen):
+                    return ast.Call(literal, ast.Arguments([]))
+                args = self.parse_args()
+                if not self.accept(tokens.RightParen):
+                    raise SyntaxError(f"Parenthesis were not closed at line {self.current_token.line}")
+                return ast.Call(literal, args)
+            return literal
         else:
             if not self.next_token:
                 self.next_token = self.current_token
-            self.throw(f"Expected ~,-,+,!,expression got {self.next_token.name}.")
+            self.throw(f"Expected an expression, got {self.next_token.name}.")
+
+    def parse_args(self):
+        # Args: Atom {',' Atom}
+        args = [self.parse_expr()]
+        while self.accept(tokens.Comma):
+            args.append(self.parse_expr())
+        return ast.Arguments(args)
 
     def parse_term(self):
-        # Term: Atom('*'|'/' Term)*
+        # Term: Atom('*'|'/'|'%' Atom)*
         node = self.parse_atom()
         while True:
             if self.accept(tokens.Multiply):
@@ -95,10 +116,25 @@ class Parser:
                 break
         return node
 
+    def parse_statement(self):
+        # Assignment: Identifier '=' Expr
+        if self.accept(tokens.Identifier):
+            const = ast.Constant(self.current_token.content)
+            if self.accept(tokens.Equals):
+                expr = self.parse_expr()
+                if not expr:
+                    self.throw(f"Expected an expression, got {self.current_token}")
+                return ast.Assignment(const, expr)
+            else:
+                return const
+
     def parse(self):
         body = ast.Body([])
         while not self.is_eof():
             if self.accept(tokens.Newline):
-                continue
-            body.statements.append(self.parse_expr())
+                pass
+            node = self.parse_statement()
+            if not node:
+                node = self.parse_expr()
+            body.statements.append(node)
         return body
