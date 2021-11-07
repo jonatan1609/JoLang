@@ -3,7 +3,7 @@ from ..tokenizer import tokens
 
 
 def preprocess(stream: typing.Iterator[tokens.Token], macros=None):
-    # Macro: '%' Identifier Expr
+    # Macro: '%macro' Identifier Expr
     if not macros:
         macros = {}
     for token in stream:
