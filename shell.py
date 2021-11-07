@@ -65,7 +65,9 @@ class Evaluate:
 
     def _visit(self, node):
         method = 'visit_' + self.pascal_case_to_snake_case(node.__class__.__name__)
-        method = getattr(self, method)
+        method = getattr(self, method, method)
+        if not callable(method):
+            raise NotImplementedError(f"method {method!r} isn't implemented yet!")
         return method(node)
 
     @staticmethod
