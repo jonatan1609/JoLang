@@ -143,9 +143,6 @@ class Parser:
                 self.next_token = self.current_token
             self.throw(f"Expected an identifier, got {self.next_token.name}")
 
-    def parse_cast(self):
-        pass
-
     def parse(self):
         body = ast.Body([])
         while not self.is_eof():
