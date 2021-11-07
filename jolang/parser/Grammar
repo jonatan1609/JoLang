@@ -1,4 +1,4 @@
-Macro: '%macro' Identifier Expr
+Macro: '%macro' Identifier {Expr}
 Term: Atom('*'|'/'|'%' Atom)*
 Expr: Term('+'|'-' Term)*
 Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [Expr] ')' | Literal | (Literal '(' Args ')'
