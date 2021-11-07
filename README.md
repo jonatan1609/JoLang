@@ -47,12 +47,12 @@ variables are set via the keyword `var`,
 Currently, they are done via `[cast_to_type]expression`,
 but that might be changed in the near future as
 that is pretty confusing.
-> `cast_to_type` can be any expression which results in a type,
+> `cast_to_type` can be any expression which result in a type,
 > for example, `f() + g()` if somehow that expression would result
 > in a type (such as `int`), then the cast would be valid.
 
 
 ### function calls:
-You can "call" any expression, `()()`, `4()`, `(3 + 4)(3)` "hello"(), etc.
+You can "call" any expression, `()()`, `4()`, `(3 + 4)(3)` `"hello"()`, etc.
 
 But an error would be raised if a special `__call__`-like method was not defined.
