@@ -47,7 +47,7 @@ class Parser:
             return ast.Number(int(self.current_token.content))
         elif self.accept(tokens.String):  # String: ('"' {char} '"') | ("'" {char} "'")
             return ast.String(self.current_token.content)
-        elif self.accept(tokens.Identifier):  # Identifier: (LowerCase | UpperCase | '_') Digit* Identifier*
+        elif self.accept(tokens.Identifier):  # Identifier: (LowerCase | UpperCase | '_') {Digit} {Identifier}
             if self.current_token.content in ("jomama", "yomama"):
                 raise RuntimeError("Ayo! you found an easter egg")
             return ast.Constant(self.current_token.content)
@@ -102,7 +102,7 @@ class Parser:
         return ast.Arguments(args)
 
     def parse_term(self):
-        # Term: Atom('*'|'/'|'%' Atom)*
+        # Term: Atom {'*'|'/'|'%' Atom}
         node = self.parse_atom()
         while True:
             if self.accept(tokens.Multiply):
@@ -116,7 +116,7 @@ class Parser:
         return node
 
     def parse_expr(self):
-        # Expr: Term('+'|'-' Term)*
+        # Expr: Term {'+'|'-' Term}
         node = self.parse_term()
         while True:
             if self.accept(tokens.Add):
