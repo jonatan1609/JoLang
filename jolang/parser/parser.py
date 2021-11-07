@@ -149,7 +149,10 @@ class Parser:
             if self.accept(tokens.Newline):
                 pass
             if self.accept(Keyword):
-                node = self.parse_assignment()
+                if self.current_token.content == "var":
+                    node = self.parse_assignment()
+                else:
+                    self.throw(f"Expected 'var', got {self.current_token.name}")
             else:
                 node = self.parse_expr()
             body.statements.append(node)
