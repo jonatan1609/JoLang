@@ -113,3 +113,9 @@ class Assignment(Ast):
     def __init__(self, const, content):
         self.const = const
         self.content = content
+
+
+class Cast(Ast):
+    def __init__(self, obj, typ):
+        self.obj = obj
+        self.typ = typ

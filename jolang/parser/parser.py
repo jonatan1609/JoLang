@@ -53,35 +53,46 @@ class Parser:
             return ast.Constant(self.current_token.content)
 
     def parse_atom(self):
-        # Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [Expr] ')' | Literal | FuncCall
-        if self.accept(tokens.UnaryTilde):
-            return ast.UnaryTilde(self.parse_atom())
+        # Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [Expr] ')' | Literal | FuncCall | '[' Expr ']' Expr
+        if self.accept(tokens.LeftBracket):
+            typ = self.parse_expr()
+            if not self.accept(tokens.RightBracket):
+                if not self.next_token:
+                    self.next_token = self.current_token
+                self.throw(f"Expected a ']', got {self.next_token.name}")
+            else:
+                obj = self.parse_expr()
+            node = ast.Cast(obj, typ)
+        elif self.accept(tokens.UnaryTilde):
+            node = ast.UnaryTilde(self.parse_atom())
         elif self.accept(tokens.LogicNot):
-            return ast.UnaryLogicalNot(self.parse_atom())
+            node = ast.UnaryLogicalNot(self.parse_atom())
         elif self.accept(tokens.Add):
-            return ast.UnaryAdd(self.parse_atom())
+            node = ast.UnaryAdd(self.parse_atom())
         elif self.accept(tokens.Subtract):
-            return ast.UnarySubtract(self.parse_atom())
+            node = ast.UnarySubtract(self.parse_atom())
+        elif literal := self.parse_literal():
+            node = literal
         elif self.accept(tokens.LeftParen):
             if self.accept(tokens.RightParen):
-                return ast.Node(None)
-            expr = self.parse_expr()
-            if not self.accept(tokens.RightParen):
-                raise SyntaxError(f"Parenthesis were not closed at line {self.current_token.line}")
-            return expr
-        elif literal := self.parse_literal():
-            if self.accept(tokens.LeftParen):
-                if self.accept(tokens.RightParen):
-                    return ast.Call(literal, ast.Arguments([]))
-                args = self.parse_args()
+                node = ast.Node(None)
+            else:
+                node = self.parse_expr()
                 if not self.accept(tokens.RightParen):
-                    raise SyntaxError(f"Parenthesis were not closed at line {self.current_token.line}")
-                return ast.Call(literal, args)
-            return literal
+                    self.throw(f"Parenthesis were not closed at line {self.current_token.line}")
         else:
             if not self.next_token:
                 self.next_token = self.current_token
             self.throw(f"Expected an expression, got {self.next_token.name}.")
+        while self.accept(tokens.LeftParen):
+            if self.accept(tokens.RightParen):
+                node = ast.Call(node, ast.Arguments([]))
+            else:
+                args = self.parse_args()
+                if not self.accept(tokens.RightParen):
+                    raise SyntaxError(f"Parenthesis were not closed at line {self.current_token.line}")
+                node = ast.Call(node, args)
+        return node
 
     def parse_args(self):
         # Args: Atom {',' Atom}
@@ -116,30 +127,33 @@ class Parser:
                 break
         return node
 
-    def parse_statement(self):
-        # Assignment: (Identifier '=' Expr) | Expr
+    def parse_assignment(self):
+        # Assignment: 'var' Identifier '=' Expr
         if self.accept(tokens.Identifier):
-            const = ast.Constant(self.current_token.content)
+            name = ast.Constant(argument=self.current_token.content)
             if self.accept(tokens.Equals):
                 expr = self.parse_expr()
-                if not expr:
-                    self.throw(f"Expected an expression, got {self.current_token}")
-                return ast.Assignment(const, expr)
-            elif self.accept(tokens.LeftParen):
-                if self.accept(tokens.RightParen):
-                    return ast.Call(const, ast.Arguments([]))
-                args = self.parse_args()
-                if not self.accept(tokens.RightParen):
-                    raise SyntaxError
-                return ast.Call(const, args)
+                return ast.Assignment(name, expr)
+            else:
+                if not self.next_token:
+                    self.next_token = self.current_token
+                self.throw(f"Expected '=', got {self.next_token.name}")
+        else:
+            if not self.next_token:
+                self.next_token = self.current_token
+            self.throw(f"Expected an identifier, got {self.next_token.name}")
+
+    def parse_cast(self):
+        pass
 
     def parse(self):
         body = ast.Body([])
         while not self.is_eof():
             if self.accept(tokens.Newline):
                 pass
-            node = self.parse_statement()
-            if not node:
+            if self.accept(Keyword):
+                node = self.parse_assignment()
+            else:
                 node = self.parse_expr()
             body.statements.append(node)
         return body

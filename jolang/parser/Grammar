@@ -10,4 +10,5 @@ UpperCase: 'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'I'|'J'|'K'|'K'|'M'\
 String: ('"' {char} '"') | ("'" {char} "'")
 Identifier: (LowerCase | UpperCase | '_') Digit* Identifier*
 Args: Expr {',' Expr}
-Assignment: Identifier '=' Expr
+Assignment: 'var' Identifier '=' Expr
+Cast: '[' Expr ']' Expr
