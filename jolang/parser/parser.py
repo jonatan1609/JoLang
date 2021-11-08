@@ -10,7 +10,7 @@ Keyword = Token("KEYWORD")
 
 class Parser:
     def __init__(self, stream: typing.Iterable[Token]):
-        self.macros = {}
+        self.macros: typing.Dict[typing.Tuple[str, str], typing.List[tokens.Token]] = {}
         self.tokens_stream = self.cast_identifier_to_keyword(stream)
         self.current_token: typing.Optional[Token] = None
         self.next_token: typing.Optional[Token] = None
