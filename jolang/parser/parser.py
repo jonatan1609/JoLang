@@ -218,6 +218,9 @@ class Parser:
     def parse_if(self):
         pass
 
+    def parse_inplace_statement(self):
+        pass
+
     def parse(self):
         body = ast.Body([])
         while not self.is_eof():
@@ -229,6 +232,13 @@ class Parser:
                 else:
                     self.throw(f"Expected 'var', got {self.current_token.name}")
             else:
-                node = self.parse_logical_or()
+                if stmt := self.parse_inplace_statement():
+                    node = stmt
+                elif stmt := self.parse_logical_or():
+                    node = stmt
+            if self.next_token:
+                if not self.next_token:
+                    self.next_token = self.current_token
+                self.throw(f"got {self.next_token.name}")
             body.statements.append(node)
         return body
