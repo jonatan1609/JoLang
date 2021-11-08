@@ -119,3 +119,59 @@ class Cast(Ast):
     def __init__(self, obj, typ):
         self.obj = obj
         self.typ = typ
+
+
+class Compare(BinaryNode):
+    pass
+
+
+class Equals(Operator):
+    pass
+
+
+class NotEqual(Operator):
+    pass
+
+
+class LessEqual(Operator):
+    pass
+
+
+class GreatEqual(Operator):
+    pass
+
+
+class GreaterThan(Operator):
+    pass
+
+
+class LesserThan(Operator):
+    pass
+
+
+class LogicOr(Operator):
+    pass
+
+
+class LogicAnd(Operator):
+    pass
+
+
+class Xor(Operator):
+    pass
+
+
+class Or(Operator):
+    pass
+
+
+class And(Operator):
+    pass
+
+
+class LeftShift(Operator):
+    pass
+
+
+class RightShift(Operator):
+    pass

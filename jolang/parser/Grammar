@@ -1,7 +1,7 @@
-Macro: '%macro' Identifier {Expr}
+Macro: '%macro' Identifier {LogicalOrExpr}
 Term: Atom {'*'|'/'|'%' Atom}
 Expr: Term {'+'|'-' Term}
-Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [Expr] ')' | Literal | (Literal '(' Args ')'
+Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [LogicalOrExpr] ')' | Literal | (Literal '(' Args ')')
 Literal: Digit | String | Identifier
 Digit: '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'
 LowerCase: 'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h'|'i'|'j'|'k'|'l'|'m'\
@@ -10,6 +10,12 @@ UpperCase: 'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'I'|'J'|'K'|'K'|'M'\
             |'N'|'O'|'P'|'Q'|'R'|'S'|'T'|'U'|'V'|'W'|'X'|'Y'|'Z'
 String: ('"' {char} '"') | ("'" {char} "'")
 Identifier: (LowerCase | UpperCase | '_') {Digit} {Identifier}
-Args: Expr {',' Expr}
-Assignment: 'var' Identifier '=' Expr
-Cast: '[' Expr ']' Expr
+Args: LogicalOrExpr {',' LogicalOrExpr}
+Assignment: 'var' Identifier '=' LogicalOrExpr
+Cast: '[' LogicalOrExpr ']' LogicalOrExpr
+ShiftExpr: Expr {('<<' | '>>') Expr}
+BinaryAndExpr: ShiftExpr {'&&' ShiftExpr}
+BinaryXorExpr: BinaryAndExpr {'^' BinaryAndExpr}
+BinaryOrExpr: BinaryXorExpr {'||' BinaryXorExpr}
+CompOp: '==' | '!=' | '<=' | '>=' | '<' | '>'
+CompExpr: BinaryOrExpr {CompOp BinaryOrExpr}
