@@ -236,7 +236,7 @@ class Parser:
                     node = stmt
                 elif stmt := self.parse_logical_or():
                     node = stmt
-            if self.next_token:
+            if self.next_token and not self.accept(tokens.Newline):
                 if not self.next_token:
                     self.next_token = self.current_token
                 self.throw(f"got {self.next_token.name}")
