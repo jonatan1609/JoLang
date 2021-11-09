@@ -19,3 +19,6 @@ BinaryXorExpr: BinaryAndExpr {'^' BinaryAndExpr}
 BinaryOrExpr: BinaryXorExpr {'||' BinaryXorExpr}
 CompOp: '==' | '!=' | '<=' | '>=' | '<' | '>'
 CompExpr: BinaryOrExpr {CompOp BinaryOrExpr}
+LogicalOrExpr: LogicalXorExpr '||' LogicalXorExpr {'||' LogicalXorExpr}
+LogicalOrExpr: LogicalXorExpr '||' LogicalXorExpr {'||' LogicalXorExpr}
+ShiftExpr: Expr {('<<' | '>>') Expr}
