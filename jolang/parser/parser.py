@@ -253,7 +253,7 @@ class Parser:
     def parse_statement(self):
         # Statement: Assignment | NEWLINE | 'return' Assignment
         if self.accept(tokens.Newline):
-            return self.current_token
+            return True
         elif assignment := self.parse_assignment():
             return assignment
         elif self.accept(Keyword):
@@ -264,7 +264,8 @@ class Parser:
         # Block: {Statement}
         statements = []
         while stmt := self.parse_statement():
-            statements.append(stmt)
+            if isinstance(stmt, ast.Ast):
+                statements.append(stmt)
         return statements
 
     def parse_func(self):
