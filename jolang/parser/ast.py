@@ -62,6 +62,12 @@ class Cast(Ast):
         self.typ = typ
 
 
+class Function(Ast):
+    def __init__(self, name: "Name", params: "Arguments", body):
+        self.name = name
+        self.params = params
+        self.body = body
+
 # operators
 
 class Add(Operator): pass
@@ -104,7 +110,7 @@ class UnarySubtract(Node): pass
 class UnaryLogicalNot(Node): pass
 class String(Node): pass
 class Name(Node): pass
-
+class Return(Node): pass
 
 # containers
 

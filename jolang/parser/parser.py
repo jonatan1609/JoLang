@@ -79,7 +79,7 @@ class Parser:
             return ast.Name(self.current_token.content)
 
     def parse_atom(self):
-        # Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [LogicalOrExpr] ')' | Literal | (Literal '(' Args ')')
+        # Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [LogicalOrExpr] ')' | Literal | (Literal '(' [Args] ')')
         if self.accept(tokens.LeftBracket):
             typ = self.parse_assignment()
             if not self.accept(tokens.RightBracket):
@@ -109,9 +109,7 @@ class Parser:
                         self.next_token = self.current_token
                     self.throw(f"Parenthesis were not closed")
         else:
-            if not self.next_token:
-                self.next_token = self.current_token
-            self.throw(f"Expected an expression, got {self.next_token.name}.")
+            return
         while self.accept(tokens.LeftParen):
             if self.accept(tokens.RightParen):
                 node = ast.Call(node, ast.Arguments([]))
@@ -243,14 +241,67 @@ class Parser:
             node = ast.Assignment(asses.pop(), asses.pop(), node)
         return node
 
-    def parse_if(self):
-        pass
+    def parse_params(self):
+        # Params: Identifier {',' Identifier}
+        params = ast.Arguments([])
+        while self.accept(tokens.Identifier):
+            params.items.append(ast.Name(argument=self.current_token.content))
+            if not self.accept(tokens.Comma):
+                break
+        return params
+
+    def parse_statement(self):
+        # Statement: Assignment | NEWLINE | 'return' Assignment
+        if self.accept(tokens.Newline):
+            return self.current_token
+        elif assignment := self.parse_assignment():
+            return assignment
+        elif self.accept(Keyword):
+            if self.current_token.content == "return":
+                return ast.Return(self.parse_assignment())
+
+    def parse_block(self):
+        # Block: {Statement}
+        statements = []
+        while stmt := self.parse_statement():
+            statements.append(stmt)
+        return statements
+
+    def parse_func(self):
+        # Func: 'func' Identifier '(' [Params] ')' '{' Block '}'
+        if self.accept(tokens.Identifier):
+            name = ast.Name(argument=self.current_token.content)
+            params = ast.Arguments([])
+            if self.accept(tokens.LeftParen):
+                params = self.parse_params()
+                if not self.accept(tokens.RightParen):
+                    if not self.next_token:
+                        self.next_token = self.current_token
+                    self.throw(f"Expected ')', got {self.next_token.name}")
+                if self.accept(tokens.LeftBrace):
+                    statements = self.parse_block()
+                    if not self.accept(tokens.RightBrace):
+                        if not self.next_token:
+                            self.next_token = self.current_token
+                        self.throw(f"Expected '{{', got {self.next_token.name}")
+                else:
+                    if not self.next_token:
+                        self.next_token = self.current_token
+                    self.throw(f"Expected '{{', got {self.next_token.name}")
+            else:
+                if not self.next_token:
+                    self.next_token = self.current_token
+                self.throw(f"Expected '(', got {self.next_token.name}")
+            return ast.Function(name=name, params=params, body=statements)
 
     def parse(self):
         body = ast.Body([])
         while not self.is_eof():
             if self.accept(tokens.Newline):
                 pass
+            elif self.accept(Keyword):
+                if self.current_token.content == 'func':
+                    node = self.parse_func()
             else:
                 node = self.parse_assignment()
             if self.next_token and not self.accept(tokens.Newline):
