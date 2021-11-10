@@ -5,16 +5,28 @@ So this is my programming language which I decided to name 'JoLang' (inspired by
 
 Features I implemented so far:
 - shell (REPL)
+- Comments
 - macros
 - operators
 - variables
 - casts (only at AST level)
-- function calls (only as AST level)
+- functions (only at AST level )
+- function calls (only at AST level)
 
 Currently, I am working on the parser and AST and between task to task, i add features to the shell.
 I haven't implemented an interpreter yet, but the shell.
 
 ## Docs:
+
+### comments:
+You can write a comment with the `$` prefix. a comments ends at the end of the line.
+example:
+
+```
+$ some comment
+$ another comment
+```
+
 ### macros:
 `%macro any_identifier replace_with`
 
@@ -54,6 +66,16 @@ that is pretty confusing.
 > for example, `f() + g()` if somehow that expression would result
 > in a type (such as `int`), then the cast would be valid.
 
+### functions:
+you can define a function with the following syntax:
+
+```
+func thing(arg1, arg2){
+ $ statements
+}
+```
+
+Note that there are no keyword-arguments.
 
 ### function calls:
 You can "call" any expression, `()()`, `4()`, `(3 + 4)(3)` `"hello"()`, etc.
