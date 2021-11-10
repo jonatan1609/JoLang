@@ -2,7 +2,7 @@ import typing
 from .keywords import keywords
 from ..tokenizer.tokens import Identifier, Token
 from ..tokenizer import tokens
-from . import ast
+from . import ast, errors
 
 
 Keyword = Token("KEYWORD")
@@ -64,8 +64,9 @@ class Parser:
             return True
         return False
 
-    def throw(self, message: str):
-        raise SyntaxError(message + f" at line {self.next_token.line} column {self.next_token.col}")
+    @property
+    def throw(self):
+        return errors.Error(self.current_token, self.next_token)
 
     def parse_literal(self):
         # Literal: Digit | String | Identifier
@@ -83,9 +84,8 @@ class Parser:
         if self.accept(tokens.LeftBracket):
             typ = self.parse_assignment()
             if not self.accept(tokens.RightBracket):
-                if not self.next_token:
-                    self.next_token = self.current_token
-                self.throw(f"Expected a ']', got {self.next_token.name}")
+                with self.throw as throw:
+                    throw(f"Expected a ']', got {throw.next_token.name}")
             else:
                 obj = self.parse_assignment()
             node = ast.Cast(obj, typ)
@@ -105,9 +105,8 @@ class Parser:
             else:
                 node = self.parse_assignment()
                 if not self.accept(tokens.RightParen):
-                    if not self.next_token:
-                        self.next_token = self.current_token
-                    self.throw(f"Parenthesis were not closed")
+                    with self.throw as throw:
+                        throw(f"Parenthesis were not closed")
         else:
             return
         while self.accept(tokens.LeftParen):
@@ -276,28 +275,23 @@ class Parser:
             if self.accept(tokens.LeftParen):
                 params = self.parse_params()
                 if not self.accept(tokens.RightParen):
-                    if not self.next_token:
-                        self.next_token = self.current_token
-                    self.throw(f"Expected ')', got {self.next_token.name}")
+                    with self.throw as throw:
+                        throw(f"Expected ')', got {throw.next_token.name}")
                 if self.accept(tokens.LeftBrace):
                     statements = self.parse_block()
                     if not self.accept(tokens.RightBrace):
-                        if not self.next_token:
-                            self.next_token = self.current_token
-                        self.throw(f"Expected '{{', got {self.next_token.name}")
+                        with self.throw as throw:
+                            throw(f"Expected '{{', got {throw.next_token.name}")
                 else:
-                    if not self.next_token:
-                        self.next_token = self.current_token
-                    self.throw(f"Expected '{{', got {self.next_token.name}")
+                    with self.throw as throw:
+                        throw(f"Expected '{{', got {throw.next_token.name}")
             else:
-                if not self.next_token:
-                    self.next_token = self.current_token
-                self.throw(f"Expected '(', got {self.next_token.name}")
+                with self.throw as throw:
+                    throw(f"Expected '(', got {throw.next_token.name}")
             return ast.Function(name=name, params=params, body=statements)
         else:
-            if not self.next_token:
-                self.next_token = self.current_token
-            self.throw(f"Expected an identifier, got {self.next_token.name}")
+            with self.throw as throw:
+                throw(f"Expected an identifier, got {throw.next_token.name}")
 
     def parse(self):
         body = ast.Body([])
@@ -308,14 +302,12 @@ class Parser:
                 if self.current_token.content == 'func':
                     node = self.parse_func()
                 else:
-                    if not self.next_token:
-                        self.next_token = self.current_token
-                    self.throw("Did not expect a keyword.")
+                    with self.throw as throw:
+                        throw("Did not expect a keyword.")
             else:
                 node = self.parse_assignment()
             if self.next_token and not self.accept(tokens.Newline):
-                if not self.next_token:
-                    self.next_token = self.current_token
-                self.throw(f"got {self.next_token.name}")
+                with self.throw as throw:
+                    throw(f"got {throw.next_token.name}")
             body.statements.append(node)
         return body
