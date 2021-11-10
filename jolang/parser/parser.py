@@ -294,6 +294,10 @@ class Parser:
                     self.next_token = self.current_token
                 self.throw(f"Expected '(', got {self.next_token.name}")
             return ast.Function(name=name, params=params, body=statements)
+        else:
+            if not self.next_token:
+                self.next_token = self.current_token
+            self.throw(f"Expected an identifier, got {self.next_token.name}")
 
     def parse(self):
         body = ast.Body([])
@@ -303,6 +307,10 @@ class Parser:
             elif self.accept(Keyword):
                 if self.current_token.content == 'func':
                     node = self.parse_func()
+                else:
+                    if not self.next_token:
+                        self.next_token = self.current_token
+                    self.throw("Did not expect a keyword.")
             else:
                 node = self.parse_assignment()
             if self.next_token and not self.accept(tokens.Newline):
