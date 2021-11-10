@@ -19,7 +19,7 @@ I haven't implemented an interpreter yet, but the shell.
 ## Docs:
 
 ### comments:
-You can write a comment with the `$` prefix. a comments ends at the end of the line.
+You can write a comment with the `$` prefix. a comment ends at the end of the line.
 example:
 
 ```
@@ -67,7 +67,7 @@ that is pretty confusing.
 > in a type (such as `int`), then the cast would be valid.
 
 ### functions:
-you can define a function with the following syntax:
+you can define a function by the following syntax:
 
 ```
 func thing(arg1, arg2){
