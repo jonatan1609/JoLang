@@ -3,7 +3,8 @@ import re
 
 from jolang.tokenizer import Tokenizer
 from jolang.preprocessor import preprocess
-from jolang.parser import Parser, ast
+from jolang.parser import Parser
+from jolang.parser import ast
 
 print("JoLang Shell on {}".format(platform.platform()))
 print("Docs: https://jolang.org")
@@ -38,7 +39,7 @@ class Evaluate:
     def visit_unary_tilde(self, node: ast.UnaryTilde):
         return ~self._visit(node.argument)
 
-    def visit_constant(self, v: ast.Constant):
+    def visit_name(self, v: ast.Name):
         var = self.variables.get(v.argument)
         if not var:
             raise NameError(f"Variable {v.argument!r} does not exist!")

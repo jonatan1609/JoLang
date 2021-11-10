@@ -122,9 +122,9 @@ class Parser:
     def parse_comp_op(self):
         # CompOp: '==' | '!=' | '<=' | '>=' | '<' | '>'
         for i in (
-            tokens.IsEqual, tokens.NotEqual,
-            tokens.LessEqual, tokens.GreatEqual,
-            tokens.LesserThan, tokens.GreaterThan,
+                tokens.IsEqual, tokens.NotEqual,
+                tokens.LessEqual, tokens.GreatEqual,
+                tokens.LesserThan, tokens.GreaterThan,
         ):
             if self.accept(i):
                 return self.comp_op_table[i]
