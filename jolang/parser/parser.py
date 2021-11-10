@@ -9,6 +9,28 @@ Keyword = Token("KEYWORD")
 
 
 class Parser:
+    comp_op_table = {
+            tokens.IsEqual: ast.Equals,
+            tokens.NotEqual: ast.NotEqual,
+            tokens.LessEqual: ast.LessEqual,
+            tokens.GreatEqual: ast.GreatEqual,
+            tokens.LesserThan: ast.LesserThan,
+            tokens.GreaterThan: ast.GreaterThan
+    }
+    inplace_op_table = {
+        tokens.Equals: ast.Assign,
+        tokens.InplaceAdd: ast.InplaceAdd,
+        tokens.InplaceSubtract: ast.InplaceSubtract,
+        tokens.InplaceModulo: ast.InplaceModulo,
+        tokens.InplaceMultiply: ast.InplaceMultiply,
+        tokens.InplaceDivide: ast.InplaceDivide,
+        tokens.InplaceRightShift: ast.InplaceRightShift,
+        tokens.InplaceLeftShift: ast.InplaceLeftShift,
+        tokens.InplaceBinOr: ast.InplaceBinOr,
+        tokens.InplaceBinAnd: ast.InplaceBinAnd,
+        tokens.InplaceXor: ast.InplaceXor
+    }
+
     def __init__(self, stream: typing.Iterable[Token]):
         self.macros: typing.Dict[typing.Tuple[str, str], typing.List[tokens.Token]] = {}
         self.tokens_stream = self.cast_identifier_to_keyword(stream)
@@ -18,6 +40,10 @@ class Parser:
 
     def advance(self) -> None:
         self.current_token, self.next_token = self.next_token, next(self.tokens_stream, None)
+
+    def push_token_back(self):
+        self.tokens_stream = iter([self.current_token, self.next_token] + list(self.tokens_stream))
+        self.advance()
 
     def is_eof(self) -> bool:
         return not self.next_token
@@ -50,18 +76,18 @@ class Parser:
         elif self.accept(tokens.Identifier):  # Identifier: (LowerCase | UpperCase | '_') {Digit} {Identifier}
             if self.current_token.content in ("jomama", "yomama"):
                 raise RuntimeError("Ayo! you found an easter egg")
-            return ast.Constant(self.current_token.content)
+            return ast.Name(self.current_token.content)
 
     def parse_atom(self):
         # Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [LogicalOrExpr] ')' | Literal | (Literal '(' Args ')')
         if self.accept(tokens.LeftBracket):
-            typ = self.parse_logical_or()
+            typ = self.parse_assignment()
             if not self.accept(tokens.RightBracket):
                 if not self.next_token:
                     self.next_token = self.current_token
                 self.throw(f"Expected a ']', got {self.next_token.name}")
             else:
-                obj = self.parse_logical_or()
+                obj = self.parse_assignment()
             node = ast.Cast(obj, typ)
         elif self.accept(tokens.UnaryTilde):
             node = ast.UnaryTilde(self.parse_atom())
@@ -77,9 +103,11 @@ class Parser:
             if self.accept(tokens.RightParen):
                 node = ast.Node(None)
             else:
-                node = self.parse_logical_or()
+                node = self.parse_assignment()
                 if not self.accept(tokens.RightParen):
-                    self.throw(f"Parenthesis were not closed at line {self.current_token.line}")
+                    if not self.next_token:
+                        self.next_token = self.current_token
+                    self.throw(f"Parenthesis were not closed")
         else:
             if not self.next_token:
                 self.next_token = self.current_token
@@ -96,21 +124,13 @@ class Parser:
 
     def parse_comp_op(self):
         # CompOp: '==' | '!=' | '<=' | '>=' | '<' | '>'
-        table = {
-            tokens.IsEqual: ast.Equals,
-            tokens.NotEqual: ast.NotEqual,
-            tokens.LessEqual: ast.LessEqual,
-            tokens.GreatEqual: ast.GreatEqual,
-            tokens.LesserThan: ast.LesserThan,
-            tokens.GreaterThan: ast.GreaterThan
-        }
         for i in (
             tokens.IsEqual, tokens.NotEqual,
             tokens.LessEqual, tokens.GreatEqual,
             tokens.LesserThan, tokens.GreaterThan,
         ):
             if self.accept(i):
-                return table[i]
+                return self.comp_op_table[i]
 
     def parse_comp(self):
         # CompExpr: BinaryOrExpr {CompOp BinaryOrExpr}
@@ -153,14 +173,14 @@ class Parser:
         return node
 
     def parse_logical_and(self):
-        # LogicalOrExpr: LogicalXorExpr '||' LogicalXorExpr {'||' LogicalXorExpr}
+        # LogicalAndExpr: CompExpr {'||' CompExpr}
         node = self.parse_comp()
         while self.accept(tokens.LogicAnd):
             node = ast.BinaryNode(node, ast.LogicAnd(), self.parse_comp())
         return node
 
     def parse_logical_or(self):
-        # LogicalOrExpr: LogicalXorExpr '||' LogicalXorExpr {'||' LogicalXorExpr}
+        # LogicalOrExpr: LogicalAndExpr {'||' LogicalAndExpr}
         node = self.parse_logical_and()
         while self.accept(tokens.LogicOr):
             node = ast.BinaryNode(node, ast.LogicOr(), self.parse_logical_and())
@@ -168,9 +188,9 @@ class Parser:
 
     def parse_args(self):
         # Args: Atom {',' Atom}
-        args = [self.parse_logical_or()]
+        args = [self.parse_assignment()]
         while self.accept(tokens.Comma):
-            args.append(self.parse_logical_or())
+            args.append(self.parse_assignment())
         return ast.Arguments(args)
 
     def parse_term(self):
@@ -200,25 +220,30 @@ class Parser:
         return node
 
     def parse_assignment(self):
-        # Assignment: 'var' Identifier '=' Expr
-        if self.accept(tokens.Identifier):
-            name = ast.Constant(argument=self.current_token.content)
-            if self.accept(tokens.Equals):
-                expr = self.parse_logical_or()
-                return ast.Assignment(name, expr)
-            else:
-                if not self.next_token:
-                    self.next_token = self.current_token
-                self.throw(f"Expected '=', got {self.next_token.name}")
-        else:
-            if not self.next_token:
-                self.next_token = self.current_token
-            self.throw(f"Expected an identifier, got {self.next_token.name}")
+        # Assignment: {Identifier '='} LogicalOrExpr
+        asses = []
+        while self.accept(tokens.Identifier):
+            name = ast.Name(self.current_token.content)
+            for i in (
+                    tokens.Equals, tokens.InplaceAdd,
+                    tokens.InplaceSubtract, tokens.InplaceModulo,
+                    tokens.InplaceMultiply, tokens.InplaceDivide,
+                    tokens.InplaceRightShift, tokens.InplaceLeftShift,
+                    tokens.InplaceBinOr, tokens.InplaceBinAnd, tokens.InplaceXor
+            ):
+                if self.accept(i):
+                    asses.append(self.inplace_op_table[i]())
+                    asses.append(name)
+            if not asses:
+                self.push_token_back()
+                break
+
+        node = self.parse_logical_or()
+        while asses:
+            node = ast.Assignment(asses.pop(), asses.pop(), node)
+        return node
 
     def parse_if(self):
-        pass
-
-    def parse_inplace_statement(self):
         pass
 
     def parse(self):
@@ -226,16 +251,8 @@ class Parser:
         while not self.is_eof():
             if self.accept(tokens.Newline):
                 pass
-            if self.accept(Keyword):
-                if self.current_token.content == "var":
-                    node = self.parse_assignment()
-                else:
-                    self.throw(f"Expected 'var', got {self.current_token.name}")
             else:
-                if stmt := self.parse_inplace_statement():
-                    node = stmt
-                elif stmt := self.parse_logical_or():
-                    node = stmt
+                node = self.parse_assignment()
             if self.next_token and not self.accept(tokens.Newline):
                 if not self.next_token:
                     self.next_token = self.current_token

@@ -11,7 +11,7 @@ UpperCase: 'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'I'|'J'|'K'|'K'|'M'\
 String: ('"' {char} '"') | ("'" {char} "'")
 Identifier: (LowerCase | UpperCase | '_') {Digit} {Identifier}
 Args: LogicalOrExpr {',' LogicalOrExpr}
-Assignment: 'var' Identifier '=' LogicalOrExpr
+Assignment: {Identifier '='} LogicalOrExpr
 Cast: '[' LogicalOrExpr ']' LogicalOrExpr
 ShiftExpr: Expr {('<<' | '>>') Expr}
 BinaryAndExpr: ShiftExpr {'&&' ShiftExpr}

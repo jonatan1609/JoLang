@@ -33,85 +33,26 @@ class BinaryNode(Ast):
         self.right = right
 
 
-class Add(Operator):
-    pass
-
-
-class Subtract(Operator):
-    pass
-
-
-class Divide(Operator):
-    pass
-
-
-class Multiply(Operator):
-    pass
-
-
-class Number(Node):
-    pass
-
-
-class UnaryTilde(Node):
-    pass
-
-
-class UnaryAdd(Node):
-    pass
-
-
-class UnarySubtract(Node):
-    pass
-
-
-class UnaryLogicalNot(Node):
-    pass
-
-
-class String(Node):
-    pass
-
-
-class Constant(Node):
-    pass
-
-
-class Modulo(Operator):
-    pass
-
-
 class Container(Ast):
     def __init__(self, items):
         self.items = items
 
 
-class Array(Container):
-    pass
-
-
-class Statement(Ast):
-    pass
-
-
-class Arguments(Container):
-    pass
-
-
 class Call(Ast):
-    def __init__(self, const: Constant, args: Arguments):
-        self.const = const
+    def __init__(self, name: "Name", args: "Arguments"):
+        self.name = name
         self.args = args
 
 
 class Body(Ast):
-    def __init__(self, statements: typing.List[Statement]):
+    def __init__(self, statements: typing.List["Statement"]):
         self.statements = statements
 
 
 class Assignment(Ast):
-    def __init__(self, const, content):
-        self.const = const
+    def __init__(self, name, op, content):
+        self.name = name
+        self.op = op
         self.content = content
 
 
@@ -121,57 +62,56 @@ class Cast(Ast):
         self.typ = typ
 
 
-class Compare(BinaryNode):
-    pass
+# operators
+
+class Add(Operator): pass
+class Subtract(Operator): pass
+class Divide(Operator): pass
+class Multiply(Operator): pass
+class Modulo(Operator): pass
+class Equals(Operator): pass
+class NotEqual(Operator): pass
+class LessEqual(Operator): pass
+class GreatEqual(Operator): pass
+class GreaterThan(Operator): pass
+class LesserThan(Operator): pass
+class LogicOr(Operator): pass
+class LogicAnd(Operator): pass
+class Xor(Operator): pass
+class Or(Operator): pass
+class And(Operator): pass
+class LeftShift(Operator): pass
+class RightShift(Operator): pass
+class Assign(Operator): pass
+class InplaceAdd(Operator): pass
+class InplaceSubtract(Operator): pass
+class InplaceModulo(Operator): pass
+class InplaceMultiply(Operator): pass
+class InplaceDivide(Operator): pass
+class InplaceRightShift(Operator): pass
+class InplaceLeftShift(Operator): pass
+class InplaceBinOr(Operator): pass
+class InplaceBinAnd(Operator): pass
+class InplaceXor(Operator): pass
+
+# nodes (one-argument nodes)
 
 
-class Equals(Operator):
-    pass
+class Number(Node): pass
+class UnaryTilde(Node): pass
+class UnaryAdd(Node): pass
+class UnarySubtract(Node): pass
+class UnaryLogicalNot(Node): pass
+class String(Node): pass
+class Name(Node): pass
 
 
-class NotEqual(Operator):
-    pass
+# containers
 
 
-class LessEqual(Operator):
-    pass
+class Array(Container): pass
+class Arguments(Container): pass
 
+# binary nodes (two-argument nodes)
 
-class GreatEqual(Operator):
-    pass
-
-
-class GreaterThan(Operator):
-    pass
-
-
-class LesserThan(Operator):
-    pass
-
-
-class LogicOr(Operator):
-    pass
-
-
-class LogicAnd(Operator):
-    pass
-
-
-class Xor(Operator):
-    pass
-
-
-class Or(Operator):
-    pass
-
-
-class And(Operator):
-    pass
-
-
-class LeftShift(Operator):
-    pass
-
-
-class RightShift(Operator):
-    pass
+class Compare(BinaryNode): pass
