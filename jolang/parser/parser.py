@@ -255,14 +255,18 @@ class Parser:
         return params
 
     def parse_statement(self):
-        # Statement: Assignment | NEWLINE | 'return' Assignment
+        # Statement: Assignment | Func | IfStmt | NEWLINE | 'return' Assignment
         if self.accept(tokens.Newline):
             return True
-        elif assignment := self.parse_assignment():
-            return assignment
         elif self.accept(Keyword):
             if self.current_token.content == "return":
                 return ast.Return(self.parse_assignment())
+            elif self.current_token.content == "func":
+                return self.parse_func()
+            elif self.current_token.content == "if":
+                return self.parse_if_stmt()
+        elif assignment := self.parse_assignment():
+            return assignment
 
     def parse_func_block(self):
         # FuncBlock: {Statement}
@@ -299,12 +303,17 @@ class Parser:
                 throw(f"Expected an identifier, got {throw.next_token.name}")
 
     def parse_block(self):
-        # Block: {Assignment | NEWLINE}
+        # Block: {Assignment | 'Func' | 'IfStmt' | NEWLINE}
         statements = []
 
         while True:
             if self.accept(tokens.Newline):
                 pass
+            elif self.accept(Keyword):
+                if self.current_token.content == "func":
+                    statements.append(self.parse_func())
+                elif self.current_token.content == "if":
+                    statements.append(self.parse_if_stmt())
             elif assignment := self.parse_assignment():
                 statements.append(assignment)
             else:

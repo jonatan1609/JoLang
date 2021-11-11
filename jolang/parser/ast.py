@@ -47,6 +47,12 @@ class If(Ast):
         self.else_block = else_block
 
 
+class While(Ast):
+    def __init__(self, condition, body):
+        self.condition = condition
+        self.body = body
+
+
 class Call(Ast):
     def __init__(self, name: "Name", args: "Arguments"):
         self.name = name
