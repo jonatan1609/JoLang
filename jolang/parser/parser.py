@@ -165,7 +165,7 @@ class Parser:
     def parse_shift_expr(self):
         # ShiftExpr: Expr {('<<' | '>>') Expr}
         node = self.parse_expr()
-        while True:
+        while not self.is_eof():
             if self.accept(tokens.RightShift):
                 node = ast.BinaryNode(node, ast.RightShift(), self.parse_expr())
             elif self.accept(tokens.LeftShift):
@@ -198,7 +198,7 @@ class Parser:
     def parse_term(self):
         # Term: Atom {'*'|'/'|'%' Atom}
         node = self.parse_atom()
-        while True:
+        while not self.is_eof():
             if self.accept(tokens.Multiply):
                 node = ast.BinaryNode(left=node, op=ast.Multiply(), right=self.parse_atom())
             elif self.accept(tokens.Divide):
@@ -212,7 +212,7 @@ class Parser:
     def parse_expr(self):
         # Expr: Term {'+'|'-' Term}
         node = self.parse_term()
-        while True:
+        while not self.is_eof():
             if self.accept(tokens.Add):
                 node = ast.BinaryNode(left=node, op=ast.Add(), right=self.parse_term())
             elif self.accept(tokens.Subtract):
@@ -265,6 +265,9 @@ class Parser:
                 return self.parse_func()
             elif self.current_token.content == "if":
                 return self.parse_if_stmt()
+            else:
+                with self.throw as throw:
+                    throw("Did not expect a keyword.")
         elif assignment := self.parse_assignment():
             return assignment
 
@@ -306,7 +309,7 @@ class Parser:
         # Block: {Assignment | 'Func' | 'IfStmt' | NEWLINE}
         statements = []
 
-        while True:
+        while not self.is_eof():
             if self.accept(tokens.Newline):
                 pass
             elif self.accept(Keyword):
@@ -314,6 +317,9 @@ class Parser:
                     statements.append(self.parse_func())
                 elif self.current_token.content == "if":
                     statements.append(self.parse_if_stmt())
+                else:
+                    with self.throw as throw:
+                        throw("Did not expect a keyword.")
             elif assignment := self.parse_assignment():
                 statements.append(assignment)
             else:
@@ -361,20 +367,9 @@ class Parser:
     def parse(self):
         body = ast.Body([])
         while not self.is_eof():
-            if self.accept(tokens.Newline):
-                pass
-            elif self.accept(Keyword):
-                if self.current_token.content == 'func':
-                    node = self.parse_func()
-                elif self.current_token.content == 'if':
-                    node = self.parse_if_stmt()
-                else:
-                    with self.throw as throw:
-                        throw("Did not expect a keyword.")
-            else:
-                node = self.parse_assignment()
+            node = self.parse_block()
             if self.next_token and not self.accept(tokens.Newline):
                 with self.throw as throw:
                     throw(f"got {throw.next_token.name}")
-            body.statements.append(node)
+            body.statements = node
         return body
