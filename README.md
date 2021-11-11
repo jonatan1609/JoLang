@@ -13,6 +13,7 @@ Features I implemented so far:
 - functions (only at AST level )
 - function calls (only at AST level)
 - if statements (only at AST level)
+- loops (while and for) (only at AST level)
 
 Currently, I am working on the parser and AST and between task to task, i add features to the shell.
 I haven't implemented an interpreter yet, but the shell.
@@ -96,5 +97,27 @@ if(a = thing()){
 elif(a = another_thing()){
 }
 else {
+}
+```
+
+### loops
+
+There are two types of loops, a `for` loop and a `while` loop.
+the `while` loop is written like `while(cond){body}` and the `for` loop
+is written like `for(expr;expr;expr){body}` where `expr` can be nothing (like `(;;)`).
+in case the for loop is defined as `(;;)` it would be equivalent to `while(true)`.
+
+examples:
+
+while:
+```
+while(name = getname()){
+    do_with(name)
+}
+```
+for:
+```
+for(i=0;i<10;i += 1){ $ there is no i++ in jolang (yet)
+    do_with(i)
 }
 ```

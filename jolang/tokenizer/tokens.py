@@ -36,6 +36,7 @@ Identifier = Token('IDENTIFIER')  # abc_def
 String = Token('STRING')  # "abc_def"
 Integer = Token('INTEGER')  # 123
 Float = Token('FLOAT')  # 123.456
+Semicolon = Token('SEMICOLON', ';')
 Add = Token('ADD', '+')
 Subtract = Token('SUBTRACT', '-')
 Equals = Token('EQUALS', '=')
@@ -93,6 +94,7 @@ groups = {1: {'!': LogicNot,
    '.': Dot,
    '/': Divide,
    ':': Colon,
+   ';': Semicolon,
    '<': LesserThan,
    '=': Equals,
    '>': GreaterThan,
