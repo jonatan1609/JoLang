@@ -24,5 +24,9 @@ LogicalAndExpr: CompExpr {'||' CompExpr}
 LogicalOrExpr: LogicalAndExpr {'||' LogicalAndExpr}
 Statement: Assignment | NEWLINE | 'return' Assignment
 Params: Identifier {',' Identifier}
-Block: {Statement}
-Func: 'func' Identifier '(' [Params] ')' '{' Block '}'
+FuncBlock: {Statement}
+Func: 'func' Identifier '(' [Params] ')' '{' FuncBlock '}'
+Block: {Assignment | NEWLINE}
+IfStmt: 'if' '(' Assignment ')' '{' Block '}'
+ElifStmt: 'elif' '(' Assignment ')' '{' Block '}'
+ElseStmt: 'else' '{' Block '}'

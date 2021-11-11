@@ -1,3 +1,4 @@
+import ast
 import inspect
 import typing
 
@@ -36,6 +37,14 @@ class BinaryNode(Ast):
 class Container(Ast):
     def __init__(self, items):
         self.items = items
+
+
+class If(Ast):
+    def __init__(self, condition, body, elifs, else_block):
+        self.condition = condition
+        self.body = body
+        self.elifs = elifs
+        self.else_block = else_block
 
 
 class Call(Ast):
