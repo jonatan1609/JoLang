@@ -12,6 +12,7 @@ Features I implemented so far:
 - casts (only at AST level)
 - functions (only at AST level )
 - function calls (only at AST level)
+- if statements (only at AST level)
 
 Currently, I am working on the parser and AST and between task to task, i add features to the shell.
 I haven't implemented an interpreter yet, but the shell.
@@ -81,3 +82,19 @@ Note that there are no keyword-arguments.
 You can "call" any expression, `()()`, `4()`, `(3 + 4)(3)` `"hello"()`, etc.
 
 But an error would be raised if a special `__call__`-like method was not defined.
+
+### if statements
+You can define an if statements by this syntax: `if(expression){body}`.
+you can also add `elif(expr){body}` and `else{body}` blocks.
+
+example:
+
+```
+if(a = thing()){
+    do_with(a) $ a is the result of thing()
+}
+elif(a = another_thing()){
+}
+else {
+}
+```
