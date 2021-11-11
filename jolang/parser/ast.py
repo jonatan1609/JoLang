@@ -23,7 +23,7 @@ class Operator(Ast):
 
 
 class Node(Ast):
-    def __init__(self, argument):
+    def __init__(self, argument=None):
         self.argument = argument
 
 
@@ -50,6 +50,12 @@ class If(Ast):
 class While(Ast):
     def __init__(self, condition, body):
         self.condition = condition
+        self.body = body
+
+
+class For(Ast):
+    def __init__(self, parts, body):
+        self.parts = parts
         self.body = body
 
 
@@ -126,6 +132,8 @@ class UnaryLogicalNot(Node): pass
 class String(Node): pass
 class Name(Node): pass
 class Return(Node): pass
+class Break(Node): pass
+class Continue(Node): pass
 
 # containers
 
@@ -136,3 +144,4 @@ class Arguments(Container): pass
 # binary nodes (two-argument nodes)
 
 class Compare(BinaryNode): pass
+

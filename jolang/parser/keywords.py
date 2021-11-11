@@ -1,9 +1,11 @@
 keywords = [
-    "var",
     "if",
     "elif",
     "else",
-    "int",
     "func",
+    "for",
+    "while",
+    "continue",
+    "break",
     "return"
 ]

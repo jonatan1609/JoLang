@@ -22,13 +22,13 @@ CompOp: '==' | '!=' | '<=' | '>=' | '<' | '>'
 CompExpr: BinaryOrExpr {CompOp BinaryOrExpr}
 LogicalAndExpr: CompExpr {'||' CompExpr}
 LogicalOrExpr: LogicalAndExpr {'||' LogicalAndExpr}
-Statement: Assignment | Func | IfStmt | NEWLINE | 'return' Assignment
+Statement: Assignment | WhileLoop | ForLoop | Func | IfStmt | NEWLINE | 'return' Assignment
 Params: Identifier {',' Identifier}
 FuncBlock: {Statement}
 Func: 'func' Identifier '(' [Params] ')' '{' FuncBlock '}'
-Block: {Assignment | 'Func' | 'IfStmt' | NEWLINE}
+Block: {Assignment | Func | IfStmt | WhileLoop | ForLoop | NEWLINE}
 IfStmt: 'if' '(' Assignment ')' '{' Block '}'
 ElifStmt: 'elif' '(' Assignment ')' '{' Block '}'
 ElseStmt: 'else' '{' Block '}'
-ForLoop: 'for' '(' Assignment ';' Assignment ';' Assignment ')' '{' Block '}'
+ForLoop: 'for' '(' [Assignment] ';' [Assignment] ';' [Assignment] ')' '{' Block '}'
 WhileLoop: 'while' '(' Assignment ')' '{' Block '}'
