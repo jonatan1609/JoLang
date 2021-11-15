@@ -82,15 +82,7 @@ class Parser:
     def parse_atom(self):
         node = None
         # Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [LogicalOrExpr] ')' | Literal | (Literal '(' [Args] ')')
-        if self.accept(tokens.LeftBracket):
-            typ = self.parse_assignment()
-            if not self.accept(tokens.RightBracket):
-                with self.throw as throw:
-                    throw(f"Expected a ']', got {throw.next_token.name}")
-            else:
-                obj = self.parse_assignment()
-            node = ast.Cast(obj, typ)
-        elif self.accept(tokens.UnaryTilde):
+        if self.accept(tokens.UnaryTilde):
             node = ast.UnaryTilde(self.parse_atom())
         elif self.accept(tokens.LogicNot):
             node = ast.UnaryLogicalNot(self.parse_atom())

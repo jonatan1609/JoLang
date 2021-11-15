@@ -13,7 +13,6 @@ Identifier: (LowerCase | UpperCase | '_') {Digit} {Identifier}
 Args: LogicalOrExpr {',' LogicalOrExpr}
 AssignOp: '=' | '+=' | '-=' | '%=' | '*=' | ' /=' | '>>=' | '<<=' | '|=' | '&=' | '^='
 Assignment: {Identifier AssignOp} LogicalOrExpr
-Cast: '[' LogicalOrExpr ']' LogicalOrExpr
 ShiftExpr: Expr {('<<' | '>>') Expr}
 BinaryAndExpr: ShiftExpr {'&&' ShiftExpr}
 BinaryXorExpr: BinaryAndExpr {'^' BinaryAndExpr}
