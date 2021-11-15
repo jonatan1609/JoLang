@@ -75,8 +75,6 @@ class Parser:
         elif self.accept(tokens.String):  # String: ('"' {char} '"') | ("'" {char} "'")
             return ast.String(self.current_token.content)
         elif self.accept(tokens.Identifier):  # Identifier: (LowerCase | UpperCase | '_') {Digit} {Identifier}
-            if self.current_token.content in ("jomama", "yomama"):
-                raise RuntimeError("Ayo! you found an easter egg")
             return ast.Name(self.current_token.content)
 
     def parse_atom(self):
