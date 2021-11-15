@@ -9,7 +9,6 @@ Features I implemented so far:
 - macros
 - operators
 - variables
-- casts (only at AST level)
 - functions (only at AST level )
 - function calls (only at AST level)
 - if statements (only at AST level)
@@ -59,14 +58,6 @@ so it's possible to do stuff like `(a = 2)` and also `(a = b = c = 2)` and even
 inplace operators `(a += b -= c = 2)` which will assign `2` to `c`
 and then subtract-assign `c` (2) from `b`, and then add-assign it back to `a`.
 
-
-### casts:
-Currently, they are done via `[cast_to_type]expression`,
-but that might be changed in the near future as
-that is pretty confusing.
-> `cast_to_type` can be any expression which result in a type,
-> for example, `f() + g()` if somehow that expression would result
-> in a type (such as `int`), then the cast would be valid.
 
 ### functions:
 you can define a function by the following syntax:

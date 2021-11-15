@@ -77,12 +77,6 @@ class Assignment(Ast):
         self.content = content
 
 
-class Cast(Ast):
-    def __init__(self, obj, typ):
-        self.obj = obj
-        self.typ = typ
-
-
 class Function(Ast):
     def __init__(self, name: "Name", params: "Arguments", body):
         self.name = name
