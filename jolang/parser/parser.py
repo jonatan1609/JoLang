@@ -108,7 +108,7 @@ class Parser:
                 if not self.accept(tokens.RightParen):
                     with self.throw as throw:
                         throw(f"Parenthesis were not closed")
-        else:
+        elif self.next_token:
             if self.accept(tokens.RightBrace) or self.accept(tokens.Semicolon) or self.accept(tokens.RightParen):
                 self.push_token_back()  # to avoid errors at end of blocks
             else:
@@ -281,6 +281,9 @@ class Parser:
         while stmt := self.parse_statement():
             if isinstance(stmt, ast.Ast):
                 statements.append(stmt)
+            if (not isinstance(self.current_token, tokens.RightBrace)) and self.next_token and (not isinstance(self.next_token, tokens.RightBrace)) and (not self.accept(tokens.Newline)):
+                with self.throw as throw:
+                    throw(f"Expected a newline, got {throw.next_token}")
         return statements
 
     def parse_func(self):
@@ -321,11 +324,10 @@ class Parser:
             "while": self.parse_while_loop,
             **keywords
         }
-
         while not self.is_eof():
-            if self.accept(tokens.Newline):
+            while self.accept(tokens.Newline):
                 pass
-            elif self.accept(Keyword):
+            if self.accept(Keyword):
                 if f := keywords.get(self.current_token.content):
                     statements.append(f())
                 else:
@@ -335,6 +337,9 @@ class Parser:
                 statements.append(assignment)
             else:
                 break
+            if (not isinstance(self.current_token, tokens.RightBrace)) and self.next_token and (not isinstance(self.next_token, tokens.RightBrace)) and (not self.accept(tokens.Newline)):
+                with self.throw as throw:
+                    throw(f"Expected a newline, got {throw.next_token}")
         return statements
 
     def parse_if_stmt(self):
