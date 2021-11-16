@@ -104,6 +104,9 @@ class Parser:
             else:
                 with self.throw as throw:
                     throw(f"Expected an expression, got {throw.next_token.name}")
+        else:
+            with self.throw as throw:
+                throw(f"Expected an expression, got {throw.next_token.name}")
         while self.accept(tokens.LeftParen):
             if self.accept(tokens.RightParen):
                 node = ast.Call(node, ast.Arguments([]))
@@ -112,6 +115,9 @@ class Parser:
                 if not self.accept(tokens.RightParen):
                     raise SyntaxError(f"Parenthesis were not closed at line {self.current_token.line}")
                 node = ast.Call(node, args)
+        if not node:
+            with self.throw as throw:
+                throw(f"Expected an expression, got {throw.next_token.name}")
         return node
 
     def parse_comp_op(self):
