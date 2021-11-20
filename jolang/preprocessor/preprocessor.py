@@ -17,13 +17,13 @@ def preprocess(stream: typing.Iterator[tokens.Token], macros=None):
                         replace_with.append(tok)
                     macros[replace.name, replace.content] = replace_with
                 else:
-                    raise SyntaxError(f"Couldn't process a macro at line {token.line}")
+                    raise SyntaxError(f"Couldn't process a preprocessor command at line {token.line}") from None
             except StopIteration:
                 try:
                     macro
                     replace
                 except UnboundLocalError:
-                    raise SyntaxError(f"Couldn't process a macro at line {token.line}")
+                    raise SyntaxError(f"Couldn't process a preprocessor command at line {token.line}") from None
         else:
             if (macro := macros.get((token.name, token.content))) is not None:
                 yield from macro
