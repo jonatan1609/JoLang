@@ -13,8 +13,13 @@ class Ast:
         return ", ".join(f"{x}={self.format_arg(getattr(self, x, None))}" for x in inspect.signature(self.__init__).parameters)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.format_args()})"
+        return f"ast.{self.__class__.__name__}({self.format_args()})"
 
+    def __eq__(self, other):
+        if not type(self) is type(other):
+            return False
+        params = inspect.signature(self.__init__).parameters.keys()
+        return all((getattr(self, param) == getattr(other, param)) for param in params)
 
 class Operator(Ast):
     def __init__(self):
