@@ -71,24 +71,24 @@ class Parser:
     def parse_literal(self):
         # Literal: Digit | String | Identifier
         if self.accept(tokens.Integer):  # Digit: '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'
-            return ast.Number(int(self.current_token.content))
+            return ast.Number(self.current_token.line, self.current_token.col, int(self.current_token.content))
         elif self.accept(tokens.String):  # String: ('"' {char} '"') | ("'" {char} "'")
-            return ast.String(self.current_token.content)
+            return ast.String(self.current_token.line, self.current_token.col, self.current_token.content)
         elif self.accept(tokens.Identifier):  # Identifier: (LowerCase | UpperCase | '_') {Digit} {Identifier}
-            return ast.Name(self.current_token.content)
+            return ast.Name(self.current_token.line, self.current_token.col, self.current_token.content)
 
     def parse_atom(self):
         node = None
         unary_op = True
         # Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [LogicalOrExpr] ')' | Literal | (Literal '(' [Args] ')')
         if self.accept(tokens.UnaryTilde):
-            node = ast.UnaryTilde(self.parse_atom())
+            node = ast.UnaryTilde(self.current_token.line, self.current_token.col, self.parse_atom())
         elif self.accept(tokens.LogicNot):
-            node = ast.UnaryLogicalNot(self.parse_atom())
+            node = ast.UnaryLogicalNot(self.current_token.line, self.current_token.col, self.parse_atom())
         elif self.accept(tokens.Add):
-            node = ast.UnaryAdd(self.parse_atom())
+            node = ast.UnaryAdd(self.current_token.line, self.current_token.col, self.parse_atom())
         elif self.accept(tokens.Subtract):
-            node = ast.UnarySubtract(self.parse_atom())
+            node = ast.UnarySubtract(self.current_token.line, self.current_token.col, self.parse_atom())
         else:
             unary_op = False
         if not unary_op:
@@ -96,19 +96,19 @@ class Parser:
                 node = literal
             elif self.accept(tokens.LeftParen):
                 if self.accept(tokens.RightParen):
-                    node = ast.Node()
+                    node = ast.Node(self.current_token.line, self.current_token.col)
                 else:
                     node = self.parse_assignment()
                     if not self.accept(tokens.RightParen):
                         self.throw(f"Parenthesis were not closed")
             while self.accept(tokens.LeftParen):
                 if self.accept(tokens.RightParen):
-                    node = ast.Call(node, ast.Arguments([]))
+                    node = ast.Call(self.current_token.line, self.current_token.col, node, ast.Arguments(self.current_token.line, self.current_token.col, []))
                 else:
                     args = self.parse_args()
                     if not self.accept(tokens.RightParen):
                         raise SyntaxError(f"Parenthesis were not closed at line {self.current_token.line}")
-                    node = ast.Call(node, args)
+                    node = ast.Call(self.current_token.line, self.current_token.col, node, args)
         if unary_op and not node.argument:
             self.current_token.col += 1
             self.throw(None)
@@ -128,7 +128,7 @@ class Parser:
         # CompExpr: BinaryOrExpr {CompOp BinaryOrExpr}
         node = self.parse_binary_or()
         while op := self.parse_comp_op():
-            node = ast.Compare(node, op[0](), self.parse_binary_or())
+            node = ast.Compare(self.current_token.line, self.current_token.col, node, op[0](self.current_token.line, self.current_token.col), self.parse_binary_or())
             if not node.right or not node.left:
                 self.current_token.col += op[1]
                 self.throw(None)
@@ -138,7 +138,7 @@ class Parser:
         # BinaryOrExpr: BinaryXorExpr {'||' BinaryXorExpr}
         node = self.parse_binary_xor()
         while self.accept(tokens.BinOr):
-            node = ast.BinaryNode(node, ast.Or(), self.parse_binary_xor())
+            node = ast.BinaryNode(self.current_token.line, self.current_token.col, node, ast.Or(self.current_token.line, self.current_token.col), self.parse_binary_xor())
             if not node.right or not node.left:
                 self.current_token.col += 1
                 self.throw(None)
@@ -148,7 +148,7 @@ class Parser:
         # BinaryXorExpr: BinaryAndExpr {'^' BinaryAndExpr}
         node = self.parse_binary_and()
         while self.accept(tokens.Xor):
-            node = ast.BinaryNode(node, ast.Xor(), self.parse_binary_and())
+            node = ast.BinaryNode(self.current_token.line, self.current_token.col, node, ast.Xor(self.current_token.line, self.current_token.col), self.parse_binary_and())
             if not node.right or not node.left:
                 self.current_token.col += 1
                 self.throw(None)
@@ -158,7 +158,7 @@ class Parser:
         # BinaryAndExpr: ShiftExpr {'&&' ShiftExpr}
         node = self.parse_shift_expr()
         while self.accept(tokens.BinAnd):
-            node = ast.BinaryNode(node, ast.And(), self.parse_shift_expr())
+            node = ast.BinaryNode(self.current_token.line, self.current_token.col, node, ast.And(self.current_token.line, self.current_token.col), self.parse_shift_expr())
             if not node.right or not node.left:
                 self.current_token.col += 1
                 self.throw(None)
@@ -169,9 +169,9 @@ class Parser:
         node = self.parse_expr()
         while not self.is_eof():
             if self.accept(tokens.RightShift):
-                node = ast.BinaryNode(node, ast.RightShift(), self.parse_expr())
+                node = ast.BinaryNode(self.current_token.line, self.current_token.col, node, ast.RightShift(self.current_token.line, self.current_token.col), self.parse_expr())
             elif self.accept(tokens.LeftShift):
-                node = ast.BinaryNode(node, ast.RightShift(), self.parse_expr())
+                node = ast.BinaryNode(self.current_token.line, self.current_token.col, node, ast.RightShift(self.current_token.line, self.current_token.col), self.parse_expr())
             else:
                 break
             if not node.right or not node.left:
@@ -183,7 +183,7 @@ class Parser:
         # LogicalAndExpr: CompExpr {'||' CompExpr}
         node = self.parse_comp()
         while self.accept(tokens.LogicAnd):
-            node = ast.BinaryNode(node, ast.LogicAnd(), self.parse_comp())
+            node = ast.BinaryNode(self.current_token.line, self.current_token.col, node, ast.LogicAnd(self.current_token.line, self.current_token.col), self.parse_comp())
             if not node.right or not node.left:
                 self.current_token.col += 1
                 self.throw(None)
@@ -193,7 +193,7 @@ class Parser:
         # LogicalOrExpr: LogicalAndExpr {'||' LogicalAndExpr}
         node = self.parse_logical_and()
         while self.accept(tokens.LogicOr):
-            node = ast.BinaryNode(node, ast.LogicOr(), self.parse_logical_and())
+            node = ast.BinaryNode(self.current_token.line, self.current_token.col, node, ast.LogicOr(self.current_token.line, self.current_token.col), self.parse_logical_and())
             if not node.right or not node.left:
                 self.current_token.col += 1
                 self.throw(None)
@@ -204,18 +204,18 @@ class Parser:
         args = [self.parse_assignment()]
         while self.accept(tokens.Comma):
             args.append(self.parse_assignment())
-        return ast.Arguments(args)
+        return ast.Arguments(self.current_token.line, self.current_token.col, args)
 
     def parse_term(self):
         # Term: Atom {'*'|'/'|'%' Atom}
         node = self.parse_atom()
         while not self.is_eof():
             if self.accept(tokens.Multiply):
-                node = ast.BinaryNode(left=node, op=ast.Multiply(), right=self.parse_atom())
+                node = ast.BinaryNode(line=self.current_token.line, column=self.current_token.col,left=node, op=ast.Multiply(), right=self.parse_atom())
             elif self.accept(tokens.Divide):
-                node = ast.BinaryNode(left=node, op=ast.Divide(), right=self.parse_atom())
+                node = ast.BinaryNode(line=self.current_token.line, column=self.current_token.col, left=node, op=ast.Divide(), right=self.parse_atom())
             elif self.accept(tokens.Modulo):
-                node = ast.BinaryNode(left=node, op=ast.Modulo(), right=self.parse_atom())
+                node = ast.BinaryNode(line=self.current_token.line, column=self.current_token.col,left=node, op=ast.Modulo(), right=self.parse_atom())
             else:
                 break
             if not node.right or not node.left:
@@ -228,9 +228,9 @@ class Parser:
         node = self.parse_term()
         while not self.is_eof():
             if self.accept(tokens.Add):
-                node = ast.BinaryNode(left=node, op=ast.Add(), right=self.parse_term())
+                node = ast.BinaryNode(self.current_token.line, self.current_token.col, left=node, op=ast.Add(self.current_token.line, self.current_token.col, ), right=self.parse_term())
             elif self.accept(tokens.Subtract):
-                node = ast.BinaryNode(left=node, op=ast.Subtract(), right=self.parse_term())
+                node = ast.BinaryNode(self.current_token.line, self.current_token.col, left=node, op=ast.Subtract(self.current_token.line, self.current_token.col, ), right=self.parse_term())
             else:
                 break
             if not node.right or not node.left:
@@ -242,7 +242,7 @@ class Parser:
         # Assignment: {Identifier '='} LogicalOrExpr
         asses = []
         while self.accept(tokens.Identifier):
-            name = ast.Name(self.current_token.content)
+            name = ast.Name(self.current_token.line, self.current_token.col, self.current_token.content)
             for i, l in (
                     (tokens.Equals, 1), (tokens.InplaceAdd, 2),
                     (tokens.InplaceSubtract, 2), (tokens.InplaceModulo, 2),
@@ -251,7 +251,7 @@ class Parser:
                     (tokens.InplaceBinOr, 2), (tokens.InplaceBinAnd, 2), (tokens.InplaceXor, 2)
             ):
                 if self.accept(i):
-                    asses.append(self.inplace_op_table[i]())
+                    asses.append(self.inplace_op_table[i](self.current_token.line, self.current_token.col))
                     asses.append(name)
                     break
             else:
@@ -267,14 +267,14 @@ class Parser:
             if not node:
                 self.current_token.col += l
                 self.throw(None)
-            node = ast.Assignment(asses.pop(), asses.pop(), node)
+            node = ast.Assignment(self.current_token.line, self.current_token.col, asses.pop(), asses.pop(), node)
         return node
 
     def parse_params(self):
         # Params: Identifier {',' Identifier}
-        params = ast.Arguments([])
+        params = ast.Arguments(self.current_token.line, self.current_token.col, [])
         while self.accept(tokens.Identifier):
-            params.items.append(ast.Name(argument=self.current_token.content))
+            params.items.append(ast.Name(self.current_token.line, self.current_token.col, argument=self.current_token.content))
             if not self.accept(tokens.Comma):
                 break
         return params
@@ -285,7 +285,7 @@ class Parser:
             return True
         elif self.accept(Keyword):
             if self.current_token.content == "return":
-                return ast.Return(self.parse_assignment())
+                return ast.Return(self.current_token.line, self.current_token.col, self.parse_assignment())
             elif self.current_token.content == "func":
                 return self.parse_func()
             elif self.current_token.content == "if":
@@ -312,8 +312,8 @@ class Parser:
     def parse_func(self):
         # Func: 'func' Identifier '(' [Params] ')' '{' FuncBlock '}'
         if self.accept(tokens.Identifier):
-            name = ast.Name(argument=self.current_token.content)
-            params = ast.Arguments([])
+            name = ast.Name(self.current_token.line, self.current_token.col, argument=self.current_token.content)
+            params = ast.Arguments(self.current_token.line, self.current_token.col, [])
             if self.accept(tokens.LeftParen):
                 params = self.parse_params()
                 if not self.accept(tokens.RightParen):
@@ -326,7 +326,7 @@ class Parser:
                     self.throw(f"Expected '{{', got {self.next_token.name}")
             else:
                 self.throw(f"Expected '(', got {self.next_token.name}")
-            return ast.Function(name=name, params=params, body=statements)
+            return ast.Function(self.current_token.line, self.current_token.col, name=name, params=params, body=statements)
         else:
             self.throw(f"Expected an identifier, got {self.next_token.name}")
 
@@ -387,7 +387,7 @@ class Parser:
             else_block = self.parse_block()
             if not self.accept(tokens.RightBrace):
                 self.throw(f"Expected '}}', got {self.next_token.name}")
-        return ast.If(condition=stmt, body=block, elifs=elifs, else_block=else_block)
+        return ast.If(self.current_token.line, self.current_token.col, condition=stmt, body=block, elifs=elifs, else_block=else_block)
 
     def parse_while_loop(self):
         # WhileLoop: 'while' '(' Assignment ')' '{' Block '}'
@@ -407,7 +407,7 @@ class Parser:
                 self.throw(f"Expected '}}', got {self.next_token.name}")
         else:
             self.throw(f"Expected '(', got {self.next_token.name}")
-        return ast.While(stmt, block)
+        return ast.While(self.current_token.line, self.current_token.col, stmt, block)
 
     def parse_for_loop(self):
         # ForLoop: 'for' '(' [Assignment] ';' [Assignment] ';' [Assignment] ')' '{' Block '}'
@@ -415,12 +415,12 @@ class Parser:
         if self.accept(tokens.LeftParen):
             for i in range(2):  # three parts in a for loop
                 if self.accept(tokens.Semicolon):
-                    parts.append(ast.Node())
+                    parts.append(ast.Node(self.current_token.line, self.current_token.col, ))
                 else:
                     parts.append(self.parse_assignment())
                     if not self.accept(tokens.Semicolon):
                         self.throw(f"Expected ';', got {self.next_token.name}")
-            parts.append(self.parse_assignment() or ast.Node())
+            parts.append(self.parse_assignment() or ast.Node(self.current_token.line, self.current_token.col, ))
             if not self.accept(tokens.RightParen):
                 self.throw(f"Expected ')', got {self.next_token.name}")
             if not self.accept(tokens.LeftBrace):
@@ -433,10 +433,10 @@ class Parser:
                 self.throw(f"Expected '}}', got {self.next_token.name}")
         else:
             self.throw(f"Expected '(', got {self.next_token.name}")
-        return ast.For(parts, block)
+        return ast.For(self.current_token.line, self.current_token.col, parts, block)
 
     def parse(self):
-        body = ast.Body([])
+        body = ast.Body(self.next_token.line, self.next_token.col, [])
         while not self.is_eof():
             node = self.parse_block()
             if self.next_token and not self.accept(tokens.Newline):

@@ -22,29 +22,38 @@ class Ast:
         return all((getattr(self, param) == getattr(other, param)) for param in params)
 
 class Operator(Ast):
-    def __init__(self):
-        pass
+    def __init__(self, line, column):
+        self.line = line
+        self.column = column
 
 
 class Node(Ast):
-    def __init__(self, argument=None):
+    def __init__(self, line, column, argument=None):
+        self.line = line
+        self.column = column
         self.argument = argument
 
 
 class BinaryNode(Ast):
-    def __init__(self, left, op, right):
+    def __init__(self, line, column, left, op, right):
+        self.line = line
+        self.column = column
         self.left = left
         self.op = op
         self.right = right
 
 
 class Container(Ast):
-    def __init__(self, items):
+    def __init__(self, line, column, items):
+        self.line = line
+        self.column = column
         self.items = items
 
 
 class If(Ast):
-    def __init__(self, condition, body, elifs, else_block):
+    def __init__(self, line, column, condition, body, elifs, else_block):
+        self.line = line
+        self.column = column
         self.condition = condition
         self.body = body
         self.elifs = elifs
@@ -52,37 +61,49 @@ class If(Ast):
 
 
 class While(Ast):
-    def __init__(self, condition, body):
+    def __init__(self, line, column, condition, body):
+        self.line = line
+        self.column = column
         self.condition = condition
         self.body = body
 
 
 class For(Ast):
-    def __init__(self, parts, body):
+    def __init__(self, line, column, parts, body):
+        self.line = line
+        self.column = column
         self.parts = parts
         self.body = body
 
 
 class Call(Ast):
-    def __init__(self, name: "Name", args: "Arguments"):
+    def __init__(self, line, column, name: "Name", args: "Arguments"):
+        self.line = line
+        self.column = column
         self.name = name
         self.args = args
 
 
 class Body(Ast):
-    def __init__(self, statements: typing.List["Statement"]):
+    def __init__(self, line, column, statements: typing.List["Statement"]):
+        self.line = line
+        self.column = column
         self.statements = statements
 
 
 class Assignment(Ast):
-    def __init__(self, name, op, content):
+    def __init__(self, line, column, name, op, content):
+        self.line = line
+        self.column = column
         self.name = name
         self.op = op
         self.content = content
 
 
 class Function(Ast):
-    def __init__(self, name: "Name", params: "Arguments", body):
+    def __init__(self, line: int, column: int, name: "Name", params: "Arguments", body):
+        self.line = line
+        self.column = column
         self.name = name
         self.params = params
         self.body = body
