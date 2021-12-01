@@ -6,8 +6,11 @@ def preprocess(stream: typing.Iterator[tokens.Token], macros=None):
     # Macro: '%macro' Identifier {Statement}
     if not macros:
         macros = {}
-    for token in stream:
-        if isinstance(token, tokens.Modulo) and not token.col:
+    copy = list(stream)
+    stream = iter(copy.copy())
+
+    for idx, token in enumerate(stream, 0):
+        if isinstance(token, tokens.Modulo) and isinstance(copy[idx - 1], tokens.Newline):
             try:
                 macro = next(stream)
                 if macro.content == "macro":
@@ -29,4 +32,5 @@ def preprocess(stream: typing.Iterator[tokens.Token], macros=None):
                 yield from macro
             else:
                 yield token
+        first = True
     yield macros

@@ -13,4 +13,4 @@ class Error:
             message += " at "
         else:
             message = ""
-        raise SyntaxError(message + f"line {self.next_token.line} column {self.next_token.col}")
+        raise SyntaxError(message + f"line {self.current_tok.line} column {self.next_token.col}")

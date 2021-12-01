@@ -1,0 +1,2 @@
+class BuiltinType:
+    pass
