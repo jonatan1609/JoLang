@@ -24,7 +24,7 @@ class Evaluate:
         return "_".join(x.lower() for x in Evaluate.PATTERN.split(string) if x)
 
     @staticmethod
-    def visit_number(node: ast.Number):
+    def visit_number(node: ast.Integer):
         return node.argument
 
     def visit_unary_add(self, node: ast.UnaryAdd):

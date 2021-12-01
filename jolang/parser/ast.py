@@ -143,7 +143,7 @@ class InplaceXor(Operator): pass
 # nodes (one-argument nodes)
 
 
-class Number(Node): pass
+class Integer(Node): pass
 class UnaryTilde(Node): pass
 class UnaryAdd(Node): pass
 class UnarySubtract(Node): pass
