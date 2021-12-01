@@ -10,12 +10,14 @@ class Tokenizer:
     FLOAT_PATTERN = re.compile(r"\d+\.?\d*")
     HEX_PATTERN = re.compile(r"0x[\da-f]+", re.IGNORECASE)
     OCTAL_PATTERN = re.compile(r"0o[0-7]+", re.IGNORECASE)
+    BIN_PATTERN = re.compile(r"0b[10]+", re.IGNORECASE)
 
     map_re_to_tokens = {
         INTEGER_PATTERN: lambda self, content: tokens.Integer.set_content(self.line, self.col, content),
         FLOAT_PATTERN: lambda self, content: tokens.Float.set_content(self.line, self.col, content),
         HEX_PATTERN: lambda self, content: tokens.Integer.set_content(self.line, self.col, int(content, 16)),
-        OCTAL_PATTERN: lambda self, content: tokens.Integer.set_content(self.line, self.col, int(content, 8))
+        OCTAL_PATTERN: lambda self, content: tokens.Integer.set_content(self.line, self.col, int(content, 8)),
+        BIN_PATTERN: lambda self, content: tokens.Integer.set_content(self.line, self.col, int(content, 2))
     }
 
     def __init__(self, stream: str):
@@ -61,7 +63,8 @@ class Tokenizer:
                 self.INTEGER_PATTERN,
                 self.FLOAT_PATTERN,
                 self.OCTAL_PATTERN,
-                self.HEX_PATTERN
+                self.HEX_PATTERN,
+                self.BIN_PATTERN
         ):
             if regex.fullmatch(number):
                 self.col = col

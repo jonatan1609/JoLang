@@ -1,4 +1,4 @@
-Macro: '%macro' Identifier {LogicalOrExpr}
+Macro: '%macro' Identifier {Statement}
 Term: Atom {'*'|'/'|'%' Atom}
 Expr: Term {'+'|'-' Term}
 Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [LogicalOrExpr] ')' | Literal | (Literal '(' [Args] ')')
@@ -21,7 +21,7 @@ CompOp: '==' | '!=' | '<=' | '>=' | '<' | '>'
 CompExpr: BinaryOrExpr {CompOp BinaryOrExpr}
 LogicalAndExpr: CompExpr {'||' CompExpr}
 LogicalOrExpr: LogicalAndExpr {'||' LogicalAndExpr}
-Statement: Assignment | WhileLoop | ForLoop | Func | IfStmt | NEWLINE | 'return' Assignment
+Statement: Assignment | WhileLoop | ForLoop | Func | IfStmt | NEWLINE | 'return' Assignment | 'continue' | 'break'
 Params: Identifier {',' Identifier}
 FuncBlock: {Statement}
 Func: 'func' Identifier '(' [Params] ')' '{' FuncBlock '}'
