@@ -1,12 +1,18 @@
-from time import time
 from jolang import main
-start = time()
 main("""
-func scoped(){
-    %macro a "A"
-    print(a)
+func a(e) {
+    func c(n) {
+        return e(e)(n)
+    }
+    return c
 }
-scoped()
-print(a)
+
+func b(e) {
+    func d(n) {
+        return n == 0 || n * e(e)(n - 1)
+    }
+    return d
+}
+
+print(a(b)(5))
 """)
-print(time() - start)

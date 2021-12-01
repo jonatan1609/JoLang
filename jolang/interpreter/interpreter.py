@@ -19,7 +19,7 @@ class Interpreter:
     def eval_function(self, node, scope):
         name = node.name.argument
         params = node.params.items
-        scope.register(name, Function(name, params, node.body))
+        scope.register(name, Function(name, params, node.body, scope=scope))
 
     def eval_name(self, node, scope):
         if scope.has(node.argument):
@@ -86,7 +86,7 @@ class Interpreter:
         if f.py_bind:
             ret = f.restype(f.py_bind(*[self.eval(arg, scope)._obj for arg in node.args.items if arg]))
         else:
-            scope = scope.merge(Scope(node.name.argument, dict(zip([x.argument for x in f.parameters], [self.eval(arg, scope) for arg in node.args.items if arg]))))
+            scope = (f.scope or scope).merge(Scope(self.eval(node.name, scope), dict(zip([x.argument for x in f.parameters], [self.eval(arg, scope) for arg in node.args.items if arg]))))
         # exec body of func within the scope
         for statement in f.body:
             if isinstance(statement, ast.Return):
@@ -116,10 +116,16 @@ class Interpreter:
             return String(node.argument)
         elif isinstance(node, ast.BinaryNode):
             if isinstance(node.op, ast.LogicAnd):
-                return self.eval(node.left, scope)._obj and self.eval(node.right, scope)._obj
+                res = self.eval(node.left, scope)._obj and self.eval(node.right, scope)._obj
             elif isinstance(node.op, ast.LogicOr):
-                return self.eval(node.left, scope)._obj or self.eval(node.right, scope)._obj
-            return self.eval_binary_node(node, scope)
+                res = self.eval(node.left, scope)._obj or self.eval(node.right, scope)._obj
+            else:
+                res = self.eval_binary_node(node, scope)
+            if isinstance(res, int):
+                return Integer(res)
+            elif isinstance(res, str):
+                return String(res)
+            return res
         elif isinstance(node, ast.Node):
             return self.eval_node(node, scope)
         elif isinstance(node, ast.Function):

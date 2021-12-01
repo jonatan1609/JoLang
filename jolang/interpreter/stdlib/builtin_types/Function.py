@@ -11,6 +11,7 @@ class Function(Object):
     body: list = field(default_factory=list)
     py_bind: ... = None
     restype: ... = None
+    scope: ... = None
 
     @Operator("Call", compatible=["Function"])
     def call(self, *args):
