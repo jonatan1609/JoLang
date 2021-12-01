@@ -115,6 +115,10 @@ class Interpreter:
         elif isinstance(node, ast.String):
             return String(node.argument)
         elif isinstance(node, ast.BinaryNode):
+            if isinstance(node.op, ast.LogicAnd):
+                return self.eval(node.left, scope)._obj and self.eval(node.right, scope)._obj
+            elif isinstance(node.op, ast.LogicOr):
+                return self.eval(node.left, scope)._obj or self.eval(node.right, scope)._obj
             return self.eval_binary_node(node, scope)
         elif isinstance(node, ast.Node):
             return self.eval_node(node, scope)

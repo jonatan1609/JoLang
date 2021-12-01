@@ -43,3 +43,11 @@ class Object(BuiltinType):
     @Operator("UnaryLogicalNot", compatible=["Object"])
     def unary_logical_not(self):
         return not self._obj
+
+    @Operator("LogicAnd", compatible=["Object"])
+    def logic_and(self, other):
+        pass
+
+    @Operator("LogicOr", compatible=["Object"])
+    def logic_or(self, other):
+        pass
