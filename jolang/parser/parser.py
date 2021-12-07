@@ -347,6 +347,8 @@ class Parser:
                 self.throw(f"Expected expression")
             if not self.accept(tokens.RightParen):
                 self.throw(f"Expected ')', got {self.next_token.name}")
+            while self.accept(tokens.Newline):
+                pass
             if not self.accept(tokens.LeftBrace):
                 self.throw(f"Expected '{{', got {self.next_token.name}")
             block = self.parse_block()
