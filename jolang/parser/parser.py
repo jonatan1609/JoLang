@@ -330,6 +330,8 @@ class Parser:
                     self.throw("Did not expect a keyword.")
             elif assignment := self.parse_assignment():
                 statements.append(assignment)
+            elif isinstance((self.next_token or self.current_token), tokens.RightBrace):
+                break
             else:
                 break
             if (not isinstance(self.current_token, tokens.RightBrace)) and self.next_token and (not isinstance(self.next_token, tokens.RightBrace)) and (not self.accept(tokens.Newline)):
@@ -353,10 +355,14 @@ class Parser:
         else:
             self.throw(f"Expected '(', got {self.next_token.name}")
         elifs = []
+        while self.accept(tokens.Newline):
+            pass
         while not self.is_eof() and self.next_token.content == "elif":
             # ElifStmt: 'elif' '(' Assignment ')' '{' Block '}'
             self.advance()
             elifs.append(self.parse_if_stmt())
+        while self.accept(tokens.Newline):
+            pass
         if not self.is_eof() and self.next_token.content == "else":
             # ElseStmt: 'else' '{' Block '}'
             self.advance()

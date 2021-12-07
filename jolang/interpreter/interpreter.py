@@ -96,6 +96,20 @@ class Interpreter:
             self.eval(statement, scope)
         return ret
 
+    def eval_if(self, node, scope):
+        condition = self.eval(node.condition, scope)._obj
+        success = False
+        if condition:
+            success = True
+            for statement in node.body:
+                self.eval(statement, scope)
+        if not success:
+            for elif_node in node.elifs:
+                self.eval_if(elif_node, scope)
+        if not success and node.else_block:
+            for statement in node.else_block:
+                self.eval(statement, scope)
+
     def eval(self, node=None, scope=None):
         if not node:
             node = self.node
@@ -130,6 +144,7 @@ class Interpreter:
             return self.eval_node(node, scope)
         elif isinstance(node, ast.Function):
             return self.eval_function(node, scope)
-
+        elif isinstance(node, ast.If):
+            return self.eval_if(node, scope)
 # todo: make stdlib operators, call stack, declaration operator.
 # todo:
