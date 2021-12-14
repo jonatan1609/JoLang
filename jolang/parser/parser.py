@@ -286,6 +286,9 @@ class Parser:
         return params
 
     def parse_func(self, keywords):
+        for i in ('continue', 'break'):
+            if i in keywords:
+                del keywords[i]
         # Func: 'func' Identifier '(' [Params] ')' '{' FuncBlock '}'
         if self.accept(tokens.Identifier):
             name = ast.Name(self.current_token.line, self.current_token.col, argument=self.current_token.content)
