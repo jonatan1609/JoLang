@@ -117,30 +117,40 @@ class Interpreter:
         self.eval(node.parts[0], new_scope)
         for_scope = scope.merge(new_scope)
 
-        while loop.active:
+        while True:
             condition = self.eval(node.parts[1], for_scope)
             if condition:
                 if not condition._obj:
                     break
-            if loop.continue_:
-                loop.continue_ = False
-            else:
                 for statement in node.body:
+                    if loop.continue_:
+                        loop.continue_ = False
+                        continue
+                    if not loop.active:
+                        break
                     self.eval(statement, for_scope)
+                else:
+                    continue
+                break
             self.eval(node.parts[2], for_scope)
 
     def eval_while(self, node, scope):
         loop = LoopScope("x")  # for future use so we can break via its name (break x)
         loop_scope = scope.merge(Scope(scope.name, loop=loop))
-        while loop.active:
+        while True:
             condition = self.eval(node.condition, loop_scope)
             if not condition._obj:
                 break
-            if loop.continue_:
-                loop.continue_ = False
+            for statement in node.body:
+                if loop.continue_:
+                    loop.continue_ = False
+                    continue
+                if not loop.active:
+                    break
+                self.eval(statement, loop_scope)
             else:
-                for statement in node.body:
-                    self.eval(statement, loop_scope)
+                continue
+            break
 
     def eval(self, node=None, scope=None):
         if not node:
