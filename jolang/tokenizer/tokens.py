@@ -47,7 +47,7 @@ Comma = Token('COMMA', ',')
 Backslash = Token('BACKSLASH', '\\')
 Multiply = Token('MULTIPLY', '*')
 Divide = Token('DIVIDE', '/')
-Comment = Token('COMMENT', '$')
+Comment = Token('COMMENT', '#')
 Modulo = Token('MODULO', '%')
 Xor = Token('XOR', '^')
 BinAnd = Token('BIN_AND', '&')
@@ -82,7 +82,7 @@ InplaceRightShift = Token('INPLACE_RIGHT_SHIFT', '>>=')
 
 
 groups = {1: {'!': LogicNot,
-   '$': Comment,
+   '#': Comment,
    '%': Modulo,
    '&': BinAnd,
    '(': LeftParen,
