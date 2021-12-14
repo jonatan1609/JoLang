@@ -180,7 +180,7 @@ class Parser:
                 self.throw(None)
         return node
 
-    def parse_return(self):
+    def parse_return(self, *_):
         # 'return' Assignment
         return ast.Return(line=self.current_token.line, column=self.current_token.col, argument=self.parse_assignment())
 
@@ -285,7 +285,7 @@ class Parser:
                 break
         return params
 
-    def parse_func(self):
+    def parse_func(self, keywords):
         # Func: 'func' Identifier '(' [Params] ')' '{' FuncBlock '}'
         if self.accept(tokens.Identifier):
             name = ast.Name(self.current_token.line, self.current_token.col, argument=self.current_token.content)
@@ -296,10 +296,11 @@ class Parser:
                     self.throw(f"Expected ')', got {self.next_token.name}")
                 if self.accept(tokens.LeftBrace):
                     statements = self.parse_block(keywords={
+                        **keywords,
                         "return": self.parse_return
                     })
                     if not self.accept(tokens.RightBrace):
-                        self.throw(f"Expected '{{', got {self.next_token.name}")
+                        self.throw(f"Expected '}}', got {self.next_token.name}")
                 else:
                     self.throw(f"Expected '{{', got {self.next_token.name}")
             else:
@@ -325,7 +326,7 @@ class Parser:
                 pass
             if self.accept(Keyword):
                 if f := keywords.get(self.current_token.content):
-                    statements.append(f())
+                    statements.append(f(keywords))
                 else:
                     self.throw("Did not expect a keyword.")
             elif assignment := self.parse_assignment():
@@ -335,10 +336,11 @@ class Parser:
             else:
                 break
             if (not isinstance(self.current_token, tokens.RightBrace)) and self.next_token and (not isinstance(self.next_token, tokens.RightBrace)) and (not self.accept(tokens.Newline)):
-                self.throw(f"Expected a newline, got {self.next_token}")
+                if not isinstance(self.current_token, tokens.Newline):
+                    self.throw(f"Expected a newline, got {self.next_token}")
         return statements
 
-    def parse_if_stmt(self):
+    def parse_if_stmt(self, keywords):
         # IfStmt: 'if' '(' Assignment ')' '{' Block '}'
         else_block = None
         if self.accept(tokens.LeftParen):
@@ -351,7 +353,7 @@ class Parser:
                 pass
             if not self.accept(tokens.LeftBrace):
                 self.throw(f"Expected '{{', got {self.next_token.name}")
-            block = self.parse_block()
+            block = self.parse_block(keywords)
             if not self.accept(tokens.RightBrace):
                 self.throw(f"Expected '}}', got {self.next_token.name}")
         else:
@@ -362,7 +364,7 @@ class Parser:
         while not self.is_eof() and self.next_token.content == "elif":
             # ElifStmt: 'elif' '(' Assignment ')' '{' Block '}'
             self.advance()
-            elifs.append(self.parse_if_stmt())
+            elifs.append(self.parse_if_stmt(keywords))
         while self.accept(tokens.Newline):
             pass
         if not self.is_eof() and self.next_token.content == "else":
@@ -375,7 +377,7 @@ class Parser:
                 self.throw(f"Expected '}}', got {self.next_token.name}")
         return ast.If(self.current_token.line, self.current_token.col, condition=stmt, body=block, elifs=elifs, else_block=else_block)
 
-    def parse_while_loop(self):
+    def parse_while_loop(self, keywords):
         # WhileLoop: 'while' '(' Assignment ')' '{' Block '}'
         if self.accept(tokens.LeftParen):
             stmt = self.parse_assignment()
@@ -386,8 +388,9 @@ class Parser:
             if not self.accept(tokens.LeftBrace):
                 self.throw(f"Expected '{{', got {self.next_token.name}")
             block = self.parse_block(keywords={
-                "continue": lambda: ast.Continue(line=self.current_token.line, column=self.current_token.col),
-                "break": lambda: ast.Break(line=self.current_token.line, column=self.current_token.col)
+                **keywords,
+                "continue": lambda *_: ast.Continue(line=self.current_token.line, column=self.current_token.col),
+                "break": lambda *_: ast.Break(line=self.current_token.line, column=self.current_token.col)
             })
             if not self.accept(tokens.RightBrace):
                 self.throw(f"Expected '}}', got {self.next_token.name}")
@@ -395,7 +398,7 @@ class Parser:
             self.throw(f"Expected '(', got {self.next_token.name}")
         return ast.While(self.current_token.line, self.current_token.col, stmt, block)
 
-    def parse_for_loop(self):
+    def parse_for_loop(self, keywords):
         # ForLoop: 'for' '(' [Assignment] ';' [Assignment] ';' [Assignment] ')' '{' Block '}'
         parts = []
         if self.accept(tokens.LeftParen):
@@ -412,8 +415,9 @@ class Parser:
             if not self.accept(tokens.LeftBrace):
                 self.throw(f"Expected '{{', got {self.next_token.name}")
             block = self.parse_block(keywords={
-                "continue": lambda: ast.Continue(line=self.current_token.line, column=self.current_token.col),
-                "break": lambda: ast.Break(line=self.current_token.line, column=self.current_token.col)
+                **keywords,
+                "continue": lambda *_: ast.Continue(line=self.current_token.line, column=self.current_token.col),
+                "break": lambda *_: ast.Break(line=self.current_token.line, column=self.current_token.col)
             })
             if not self.accept(tokens.RightBrace):
                 self.throw(f"Expected '}}', got {self.next_token.name}")

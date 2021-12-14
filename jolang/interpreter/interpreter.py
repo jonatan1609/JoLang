@@ -1,4 +1,4 @@
-from .scope import Scope
+from .scope import Scope, FunctionScope, LoopScope
 from .errors import NameError, StackCall, OperatorError, RuntimeError
 from ..parser import ast
 from .stdlib.builtin_types.Integer import Integer
@@ -63,9 +63,10 @@ class Interpreter:
     def eval_node(self, node, scope):
         if type(node) is ast.Node:
             return
-        result = self.eval(node.argument, scope).operate(node.__class__.__name__)
+        obj = self.eval(node.argument, scope)
+        result = obj.operate(node.__class__.__name__)
         if result is empty:
-            OperatorError(f"Can't {node.__class__.__name__} with {node.argument.__class__.__name__!r}", stack=[
+            OperatorError(f"Can't {node.__class__.__name__} with {obj.__class__.__name__!r}", stack=[
                 StackCall(self.file.name, node.line, node.column, repr(scope), self.file.line(node.line))
             ]).throw()
         if isinstance(node, ast.UnaryLogicalNot):
@@ -110,6 +111,37 @@ class Interpreter:
             for statement in node.else_block:
                 self.eval(statement, scope)
 
+    def eval_for(self, node, scope):
+        loop = LoopScope("x")  # for future use so we can break via its name (break x)
+        new_scope = scope.merge(Scope(scope.name, loop=loop))
+        self.eval(node.parts[0], new_scope)
+        for_scope = scope.merge(new_scope)
+
+        while loop.active:
+            condition = self.eval(node.parts[1], for_scope)
+            if condition:
+                if not condition._obj:
+                    break
+            if loop.continue_:
+                loop.continue_ = False
+            else:
+                for statement in node.body:
+                    self.eval(statement, for_scope)
+            self.eval(node.parts[2], for_scope)
+
+    def eval_while(self, node, scope):
+        loop = LoopScope("x")  # for future use so we can break via its name (break x)
+        loop_scope = scope.merge(Scope(scope.name, loop=loop))
+        while loop.active:
+            condition = self.eval(node.condition, loop_scope)
+            if not condition._obj:
+                break
+            if loop.continue_:
+                loop.continue_ = False
+            else:
+                for statement in node.body:
+                    self.eval(statement, loop_scope)
+
     def eval(self, node=None, scope=None):
         if not node:
             node = self.node
@@ -118,6 +150,12 @@ class Interpreter:
         if isinstance(node, ast.Body):
             for statement in node.statements:
                 self.eval(statement, scope)
+        elif isinstance(node, ast.Continue):
+            scope.loop.continue_ = True
+            return node
+        elif isinstance(node, ast.Break):
+            scope.loop.active = False
+            return node
         elif isinstance(node, ast.Name):
             return self.eval_name(node, scope)
         elif isinstance(node, ast.Assignment):
@@ -146,5 +184,9 @@ class Interpreter:
             return self.eval_function(node, scope)
         elif isinstance(node, ast.If):
             return self.eval_if(node, scope)
+        elif isinstance(node, ast.While):
+            return self.eval_while(node, scope)
+        elif isinstance(node, ast.For):
+            return self.eval_for(node, scope)
 # todo: make stdlib operators, call stack, declaration operator.
-# todo:
+# todo: scope functions and loops
