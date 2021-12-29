@@ -1,3 +1,6 @@
+import copy
+
+
 class LoopScope:
     def __init__(self, name: str):
         self.name = name
@@ -5,8 +8,18 @@ class LoopScope:
         self.continue_ = False
 
 
-class FunctionScope:
-    pass
+class FuncScope:
+    def __init__(self, name: str):
+        self.name = name
+        self.active = True
+        self.ret = None
+
+
+class Frame:
+    def __init__(self, name, line, column):
+        self.line = line
+        self.column = column
+        self.name = name
 
 
 class Scope:
@@ -15,6 +28,7 @@ class Scope:
         self.namespace = namespace or {}
         self.func = func
         self.loop = loop
+        self.frames = []
 
     def register(self, name, content):
         self.namespace[name] = content
@@ -31,7 +45,9 @@ class Scope:
         return self.namespace[name]
 
     def merge(self, other: "Scope"):
-        return Scope(other.name, {**self.namespace, **other.namespace}, other.func, other.loop)
+        s = Scope(other.name, {**self.namespace, **other.namespace}, other.func, other.loop)
+        s.frames = copy.deepcopy(self.frames)
+        return s
 
     def __repr__(self):
         return f"<scope: {self.name}>"

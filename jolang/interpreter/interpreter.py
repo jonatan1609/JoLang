@@ -1,5 +1,5 @@
-from .scope import Scope, FunctionScope, LoopScope
-from .errors import NameError, StackCall, OperatorError, RuntimeError
+from .scope import Scope, LoopScope, Frame, FuncScope
+from .errors import NameError, StackCall, OperatorError, RuntimeError, make_stack
 from ..parser import ast
 from .stdlib.builtin_types.Integer import Integer
 from .stdlib.builtin_types.String import String
@@ -24,9 +24,8 @@ class Interpreter:
     def eval_name(self, node, scope):
         if scope.has(node.argument):
             return scope.get(node.argument)
-        NameError(f"{node.argument!r} doesn't exist in the current scope", stack=[
-            StackCall(self.file.name, node.line, node.column, repr(scope), self.file.line(node.line))
-        ]).throw()
+
+        NameError(f"{node.argument!r} doesn't exist in the current scope", stack=make_stack(self.file, node, scope)).throw()
 
     def eval_assignment(self, node, scope):
         res = Null()
@@ -87,14 +86,15 @@ class Interpreter:
         if f.py_bind:
             ret = f.restype(f.py_bind(*[self.eval(arg, scope)._obj for arg in node.args.items if arg]))
         else:
-            scope = (f.scope or scope).merge(Scope(self.eval(node.name, scope), dict(zip([x.argument for x in f.parameters], [self.eval(arg, scope) for arg in node.args.items if arg]))))
-        # exec body of func within the scope
-        for statement in f.body:
-            if isinstance(statement, ast.Return):
-                if statement.argument:
-                    ret = self.eval(statement.argument, scope)
-                break
-            self.eval(statement, scope)
+            name = self.eval(node.name, scope)
+            f_scope = f.scope.merge(Scope(name, dict(zip([x.argument for x in f.parameters], [self.eval(arg, scope) for arg in node.args.items if arg]))))
+            f_scope.func = FuncScope(name)
+            # exec body of func within the scope
+            for statement in f.body:
+                self.eval(statement, f_scope)
+                if not f_scope.func.active:
+                    ret = f_scope.func.ret
+                    break
         return ret
 
     def eval_if(self, node, scope):
@@ -113,7 +113,7 @@ class Interpreter:
 
     def eval_for(self, node, scope):
         loop = LoopScope("x")  # for future use so we can break via its name (break x)
-        new_scope = scope.merge(Scope(scope.name, loop=loop))
+        new_scope = scope.merge(Scope(scope.name, loop=loop, func=scope.func))
         self.eval(node.parts[0], new_scope)
         for_scope = scope.merge(new_scope)
 
@@ -130,13 +130,14 @@ class Interpreter:
                         break
                     self.eval(statement, for_scope)
                 else:
+                    self.eval(node.parts[2], for_scope)
                     continue
                 break
-            self.eval(node.parts[2], for_scope)
+
 
     def eval_while(self, node, scope):
         loop = LoopScope("x")  # for future use so we can break via its name (break x)
-        loop_scope = scope.merge(Scope(scope.name, loop=loop))
+        loop_scope = scope.merge(Scope(scope.name, loop=loop, func=scope.func))
         while True:
             condition = self.eval(node.condition, loop_scope)
             if not condition._obj:
@@ -157,6 +158,10 @@ class Interpreter:
             node = self.node
         if not scope:
             scope = self.scope
+        if scope.func and not scope.func.active:
+            return Null()
+        if scope.loop and (not scope.loop.active or scope.loop.continue_):
+            return Null()
         if isinstance(node, ast.Body):
             for statement in node.statements:
                 self.eval(statement, scope)
@@ -166,6 +171,12 @@ class Interpreter:
         elif isinstance(node, ast.Break):
             scope.loop.active = False
             return node
+        elif isinstance(node, ast.Return):
+            scope.func.ret = Null()
+            if node.argument:
+                scope.func.ret = self.eval(node.argument, scope)
+            scope.func.active = False
+            return scope.func.ret
         elif isinstance(node, ast.Name):
             return self.eval_name(node, scope)
         elif isinstance(node, ast.Assignment):
@@ -199,4 +210,3 @@ class Interpreter:
         elif isinstance(node, ast.For):
             return self.eval_for(node, scope)
 # todo: make stdlib operators, call stack, declaration operator.
-# todo: scope functions and loops

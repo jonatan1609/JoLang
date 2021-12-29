@@ -96,14 +96,14 @@ class Parser:
                 node = literal
             elif self.accept(tokens.LeftParen):
                 if self.accept(tokens.RightParen):
-                    node = ast.Node(self.current_token.line, self.current_token.col)
+                    node = ast.Node(self.current_token.line, self.current_token.col-2)
                 else:
                     node = self.parse_assignment()
                     if not self.accept(tokens.RightParen):
                         self.throw(f"Parenthesis were not closed")
             while self.accept(tokens.LeftParen):
                 if self.accept(tokens.RightParen):
-                    node = ast.Call(self.current_token.line, self.current_token.col, node, ast.Arguments(self.current_token.line, self.current_token.col, []))
+                    node = ast.Call(self.current_token.line, self.current_token.col - 1, node, ast.Arguments(self.current_token.line, self.current_token.col, []))
                 else:
                     line, col = self.current_token.line, self.current_token.col
                     args = self.parse_args()

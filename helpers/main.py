@@ -1,8 +1,11 @@
 from jolang import main
 main("""
-for(;;){
-    func a(){}
-    a()
+func a(){
+if(1){return 8}
+print(a)
 }
+print(a())
 """)
-# todo do not pass continue/break tokens to functions
+
+
+# todo: add frames for the main scope, delete the last frame when exiting the function
