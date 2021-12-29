@@ -76,6 +76,8 @@ class Parser:
             return ast.String(self.current_token.line, self.current_token.col, self.current_token.content)
         elif self.accept(tokens.Identifier):  # Identifier: (LowerCase | UpperCase | '_') {Digit} {Identifier}
             return ast.Name(self.current_token.line, self.current_token.col, self.current_token.content)
+        elif self.accept(tokens.Float):  # Float: {Digit} '.' {Digit}
+            return ast.Float(self.current_token.line, self.current_token.col, float(self.current_token.content))
 
     def parse_atom(self):
         node = None

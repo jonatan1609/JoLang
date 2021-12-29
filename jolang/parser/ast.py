@@ -144,6 +144,7 @@ class InplaceXor(Operator): pass
 
 
 class Integer(Node): pass
+class Float(Node): pass
 class UnaryTilde(Node): pass
 class UnaryAdd(Node): pass
 class UnarySubtract(Node): pass

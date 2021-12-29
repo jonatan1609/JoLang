@@ -93,3 +93,7 @@ class Integer(Object):
     @Operator("RightShift", compatible=["Integer"])
     def right_shift(self, other):
         return Integer(self._obj >> other._obj)
+
+
+class Float(Integer):
+    pass

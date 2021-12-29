@@ -1,10 +1,7 @@
 from jolang import main
 main("""
-func a(){
-if(1){return 8}
-print(a)
-}
-print(a())
+func sqrt(n){ return pow(n, 0.5) }
+print(sqrt(16))
 """)
 
 

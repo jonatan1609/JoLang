@@ -1,7 +1,7 @@
 from .scope import Scope, LoopScope, Frame, FuncScope
 from .errors import NameError, StackCall, OperatorError, RuntimeError, make_stack
 from ..parser import ast
-from .stdlib.builtin_types.Integer import Integer
+from .stdlib.builtin_types.Integer import Integer, Float
 from .stdlib.builtin_types.String import String
 from .stdlib.builtin_types.Null import Null
 from .stdlib.builtin_types import empty
@@ -187,6 +187,8 @@ class Interpreter:
             return Integer(node.argument)
         elif isinstance(node, ast.String):
             return String(node.argument)
+        elif isinstance(node, ast.Float):
+            return Float(node.argument)
         elif isinstance(node, ast.BinaryNode):
             if isinstance(node.op, ast.LogicAnd):
                 res = self.eval(node.left, scope)._obj and self.eval(node.right, scope)._obj
