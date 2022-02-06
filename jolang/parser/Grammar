@@ -1,7 +1,7 @@
 Macro: '%macro' Identifier {Statement}
 Term: Atom {'*'|'/'|'%' Atom}
 Expr: Term {'+'|'-' Term}
-Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [LogicalOrExpr] ')' | Literal | (Literal '(' [Args] ')')
+Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [Assignment] ')' | Literal | (Literal '(' [Args] ')')
 Literal: Digit | String | Identifier
 Digit: '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'
 Float: {Digit} '.' {Digit}
@@ -11,7 +11,7 @@ UpperCase: 'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'I'|'J'|'K'|'K'|'M'\
             |'N'|'O'|'P'|'Q'|'R'|'S'|'T'|'U'|'V'|'W'|'X'|'Y'|'Z'
 String: ('"' {char} '"') | ("'" {char} "'")
 Identifier: (LowerCase | UpperCase | '_') {Digit} {Identifier}
-Args: LogicalOrExpr {',' LogicalOrExpr}
+Args: Assignment {',' Assignment}
 AssignOp: '=' | '+=' | '-=' | '%=' | '*=' | ' /=' | '>>=' | '<<=' | '|=' | '&=' | '^='
 Assignment: {Identifier AssignOp} LogicalOrExpr
 ShiftExpr: Expr {('<<' | '>>') Expr}
@@ -32,3 +32,5 @@ ElifStmt: 'elif' '(' Assignment ')' '{' Block '}'
 ElseStmt: 'else' '{' Block '}'
 ForLoop: 'for' '(' [Assignment] ';' [Assignment] ';' [Assignment] ')' '{' Block '}'
 WhileLoop: 'while' '(' Assignment ')' '{' Block '}'
+Array: '[' Assignment {',' Assignment} ']'
+Index = '[' Assignment [':' Assignment [':' Assignment]] ']'
