@@ -1,4 +1,5 @@
-from .scope import Scope, LoopScope, Frame, FuncScope
+import builtins
+from .scope import Scope, LoopScope, FuncScope
 from .errors import NameError, StackCall, OperatorError, RuntimeError, make_stack
 from ..parser import ast
 from .stdlib.builtin_types.Integer import Integer, Float
@@ -8,6 +9,7 @@ from .stdlib.builtin_types import empty
 from .stdlib.std_functions.functions import functions
 from .stdlib.builtin_types.Function import Function
 from .stdlib.builtin_types.Boolean import Boolean
+from .stdlib.builtin_types.Array import Array
 
 
 class Interpreter:
@@ -30,7 +32,7 @@ class Interpreter:
     def eval_assignment(self, node, scope):
         res = Null()
         if isinstance(node.op, ast.Assign):
-            scope.register(node.name.argument, self.eval(node.content, scope))
+            scope.register(node.name.argument, res := self.eval(node.content, scope))
         else:
             if scope.has(node.name.argument):
                 res = self.eval(node.content, scope)
@@ -134,7 +136,6 @@ class Interpreter:
                     continue
                 break
 
-
     def eval_while(self, node, scope):
         loop = LoopScope("x")  # for future use so we can break via its name (break x)
         loop_scope = scope.merge(Scope(scope.name, loop=loop, func=scope.func))
@@ -152,6 +153,25 @@ class Interpreter:
             else:
                 continue
             break
+
+    def eval_array(self, node, scope):
+        items = [self.eval(item, scope) for item in node.items]
+        return Array(items)
+
+    def eval_index(self, node, scope):
+        obj = self.eval(node.obj, scope)
+        start, stop, step = node.start, node.end, node.step
+        if start: start = self.eval(start, scope)
+        if stop: stop = self.eval(stop, scope)
+        if step: step = self.eval(step, scope)
+        res = obj.operate(node.__class__.__name__, start, stop, step)
+        if res is empty:
+            OperatorError(f"Can't slice '{obj}'",
+                          stack=[
+                              StackCall(self.file.name, node.line, node.column, repr(scope),
+                                        self.file.line(node.line))
+                          ]).throw()
+        return res
 
     def eval(self, node=None, scope=None):
         if not node:
@@ -211,4 +231,10 @@ class Interpreter:
             return self.eval_while(node, scope)
         elif isinstance(node, ast.For):
             return self.eval_for(node, scope)
+        elif isinstance(node, ast.Array):
+            return self.eval_array(node, scope)
+        elif isinstance(node, ast.Index):
+            return self.eval_index(node, scope)
+        else:
+            raise builtins.RuntimeError("Unknown node")
 # todo: make stdlib operators, call stack, declaration operator.

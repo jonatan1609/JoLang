@@ -108,6 +108,16 @@ class Function(Ast):
         self.params = params
         self.body = body
 
+
+class Index(Ast):
+    def __init__(self, line: int, column: int, start, end, step, obj):
+        self.line = line
+        self.column = column
+        self.start = start
+        self.end = end
+        self.step = step
+        self.obj = obj
+
 # operators
 
 class Add(Operator): pass

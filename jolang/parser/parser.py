@@ -82,7 +82,7 @@ class Parser:
     def parse_atom(self):
         node = None
         unary_op = True
-        # Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [LogicalOrExpr] ')' | Literal | (Literal '(' [Args] ')')
+        # Atom: ({'~'|'-'|'+'|'!'} Atom) | '(' [Assignment] ')' | Literal | (Literal '(' [Args] ')')
         if self.accept(tokens.UnaryTilde):
             node = ast.UnaryTilde(self.current_token.line, self.current_token.col, self.parse_atom())
         elif self.accept(tokens.LogicNot):
@@ -103,6 +103,10 @@ class Parser:
                     node = self.parse_assignment()
                     if not self.accept(tokens.RightParen):
                         self.throw(f"Parenthesis were not closed")
+            elif self.accept(tokens.LeftBracket):
+                self.push_token_back()
+                node = self.parse_array()
+
             while self.accept(tokens.LeftParen):
                 if self.accept(tokens.RightParen):
                     node = ast.Call(self.current_token.line, self.current_token.col - 1, node, ast.Arguments(self.current_token.line, self.current_token.col, []))
@@ -112,6 +116,12 @@ class Parser:
                     if not self.accept(tokens.RightParen):
                         raise SyntaxError(f"Parenthesis were not closed at line {self.current_token.line}")
                     node = ast.Call(line, col, node, args)
+            while self.accept(tokens.LeftBracket):
+                line, col = self.current_token.line, self.current_token.col
+                self.push_token_back()
+                start, stop, step = self.parse_index()
+                node = ast.Index(line, col, start, stop, step, node)
+
         if unary_op and not node.argument:
             self.current_token.col += 1
             self.throw(None)
@@ -246,7 +256,7 @@ class Parser:
         return node
 
     def parse_assignment(self):
-        # Assignment: {Identifier '='} LogicalOrExpr
+        # Assignment: {Identifier AssignOp} LogicalOrExpr
         asses = []
         while self.accept(tokens.Identifier):
             name = ast.Name(self.current_token.line, self.current_token.col, self.current_token.content)
@@ -429,6 +439,51 @@ class Parser:
         else:
             self.throw(f"Expected '(', got {self.next_token.name}")
         return ast.For(self.current_token.line, self.current_token.col, parts, block)
+
+    def parse_array(self):
+        # Array: '[' Assignment {',' Assignment} ']'
+
+        if self.accept(tokens.LeftBracket):
+            line = self.current_token.line
+            col = self.current_token.col
+            if self.accept(tokens.RightBracket):
+                return ast.Array(line=line, column=col, items=[])
+            if isinstance(self.next_token, tokens.Comma):
+                self.throw("Syntax Error")
+            items = [self.parse_assignment()]
+            while self.accept(tokens.Comma):
+                items.append(self.parse_assignment())
+            if isinstance(self.current_token, tokens.Comma):
+                items.pop()
+            if not self.accept(tokens.RightBracket):
+                self.throw("Syntax Error")
+            return ast.Array(line=line, column=col, items=items)
+
+    def parse_index(self):
+        # Index = '[' Assignment [':' Assignment [':' Assignment]] ']'
+
+        start = stop = step = None
+        if self.accept(tokens.LeftBracket):
+            if self.accept(tokens.RightBracket):
+                self.throw("Syntax Error")
+            start = self.parse_assignment()
+            if not start:
+                start = ast.Node(self.current_token.line, self.current_token.col)
+            if not self.accept(tokens.RightBracket):
+                if not self.accept(tokens.Colon):
+                    self.throw("Syntax Error")
+                stop = self.parse_assignment()
+                if not stop:
+                    stop = ast.Node(self.current_token.line, self.current_token.col)
+                if not self.accept(tokens.RightBracket):
+                    if not self.accept(tokens.Colon):
+                        self.throw("Syntax Error")
+                    step = self.parse_assignment()
+                    if not step:
+                        step = ast.Node(self.current_token.line, self.current_token.col)
+                    if not self.accept(tokens.RightBracket):
+                        self.throw("Syntax Error")
+        return start, stop, step
 
     def parse(self):
         body = ast.Body(self.next_token.line, self.next_token.col, [])

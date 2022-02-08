@@ -1,7 +1,7 @@
 from jolang import main
 main("""
-func sqrt(n){ return pow(n, 0.5) }
-print(sqrt(16))
+a = [[1,2,3]]
+print(a[0][2])
 """)
 
 

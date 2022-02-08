@@ -15,15 +15,15 @@ class Operator:
             f = f.f
         self.f = f
         if not hasattr(f, "names"):
-            f.names = []
-        f.names.append(self.op_name)
+            f.names = {}
+        f.names[self.op_name] = self.compat
         return self
 
-    def call(self, *args):
-        for arg in args:
-            if not any(x in self.compat for x in arg.inheritance()):
-                return empty
+    def call(self, op, *args):
         f = self.f
         while isinstance(f, Operator):
             f = f.f
+        for arg in args[1:]:
+            if arg and not any(x in f.names[op] for x in arg.inheritance()):
+                return empty
         return f(*args)

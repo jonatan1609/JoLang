@@ -11,6 +11,6 @@ class String(Object):
     def add(self, other):
         return String(self._obj + other._obj)
 
-    @Operator("Multiply", compatible=["String"])
+    @Operator("Multiply", compatible=["Integer", "String"])
     def multiply(self, other):
         return String(self._obj * other._obj)

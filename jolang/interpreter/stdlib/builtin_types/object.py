@@ -14,23 +14,26 @@ class Object(BuiltinType):
             for op in dir(self) if isinstance(op_ := getattr(self, op), Operator) and not op.startswith("_") for name in op_.f.names
         }
 
-    def operate(self, op, *args):
-        if not (op := self.available_operator(op)):
+    def operate(self, op_name, *args):
+        if not (op := self.available_operator(op_name)):
             return empty
         else:
-            return self.__do_operate(op, *args)
+            return self.__do_operate(op, op_name, *args)
 
-    def available_operator(self, op):
+    def available_operator(self, op_name):
         if not self.operators:
             self.operators = self.__find_operators()
-        if op := self.operators.get(op):
+        if op := self.operators.get(op_name):
             return op
 
-    def __do_operate(self, op, *args):
-        return op(self, *args)
+    def __do_operate(self, op, op_name, *args):
+        return op(op_name, self, *args)
 
     def inheritance(self):
         return [cls.__name__ for cls in self.__class__.mro()]
+
+    def __repr__(self):
+        return str(self._obj)
 
     @Operator("Equals", compatible=["Object"])
     def equals(self, other):
