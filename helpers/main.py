@@ -1,10 +1,10 @@
 from jolang import main
 
 main("""
-k = []
-k.append(2)
-k.append(2)
-k.append(2)
+k = [print()]
+k.append(1)
+k.append(print())
+k.append([k])
 print(k)
 """)
 

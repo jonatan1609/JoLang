@@ -1,5 +1,9 @@
 from .object import Object
 from .operator import Operator, Attribute
+from .String import String
+from .Integer import Integer
+from .Null import Null
+
 
 
 class Array(Object):
@@ -15,5 +19,12 @@ class Array(Object):
 
     @Attribute("append")
     def append(self, item):
+        if isinstance(item, str):
+            item = String(item)
+        elif item is None:
+            item = Null()
+        elif isinstance(item, int):
+            item = Integer(item)
+        elif isinstance(item, list):
+            item = Array(item)
         self._obj.append(item)
-
