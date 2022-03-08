@@ -1,11 +1,12 @@
 from .builtin import BuiltinType
-from .operator import Operator
+from .operator import Operator, Attribute
 from . import empty
 
 
 class Object(BuiltinType):
     def __init__(self):
         self.operators = self.__find_operators()
+        self.attributes = self.__find_attributes()
         self._obj = None
 
     def __find_operators(self):
@@ -13,6 +14,9 @@ class Object(BuiltinType):
             name: op_.call
             for op in dir(self) if isinstance(op_ := getattr(self, op), Operator) and not op.startswith("_") for name in op_.f.names
         }
+
+    def __find_attributes(self):
+        return {getattr(self, name).op_name: getattr(self, name) for name in dir(self) if isinstance(getattr(self, name, ""), Attribute)}
 
     def operate(self, op_name, *args):
         if not (op := self.available_operator(op_name)):
@@ -31,6 +35,14 @@ class Object(BuiltinType):
 
     def inheritance(self):
         return [cls.__name__ for cls in self.__class__.mro()]
+
+    @Operator("GetAttr", compatible=["Object"])
+    def getattr(self, attr):
+        obj = self.attributes.get(attr._obj, empty)
+        if obj is not empty:
+            obj.init(self)
+            return obj.function
+        return obj
 
     def __repr__(self):
         return str(self._obj)

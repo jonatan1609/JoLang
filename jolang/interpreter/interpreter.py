@@ -1,6 +1,7 @@
 import builtins
+import inspect
 from .scope import Scope, LoopScope, FuncScope
-from .errors import NameError, StackCall, OperatorError, RuntimeError, make_stack
+from .errors import NameError, StackCall, AttributeError, OperatorError, RuntimeError, make_stack
 from ..parser import ast
 from .stdlib.builtin_types.Integer import Integer, Float
 from .stdlib.builtin_types.String import String
@@ -63,7 +64,7 @@ class Interpreter:
 
     def eval_node(self, node, scope):
         if type(node) is ast.Node:
-            return
+            return Null()
         obj = self.eval(node.argument, scope)
         result = obj.operate(node.__class__.__name__)
         if result is empty:
@@ -86,7 +87,23 @@ class Interpreter:
                 StackCall(self.file.name, node.line, node.column, repr(scope), self.file.line(node.line))
             ]).throw()
         if f.py_bind:
-            ret = f.restype(f.py_bind(*[self.eval(arg, scope)._obj for arg in node.args.items if arg]))
+            restype = f.restype
+            if restype is empty:
+                restype = lambda x:x
+            if not inspect.isbuiltin(f.py_bind):
+                if len(inspect.getfullargspec(f.py_bind).args) != len(node.args.items):
+                    RuntimeError(
+                        f"{f.name!r} requires {len(inspect.getfullargspec(f.py_bind).args)} arguments but {len(node.args.items)} arguments were supplied",
+                        stack=[
+                            StackCall(self.file.name, node.line, node.column, repr(scope), self.file.line(node.line))
+                    ]).throw()
+            ret = restype(f.py_bind(*[getattr(self.eval(arg, scope), "_obj", Null()) for arg in node.args.items if arg]))
+            if isinstance(ret, tuple) and ret[0] is empty:
+                RuntimeError(
+                    ret[1],
+                    stack=[
+                        StackCall(self.file.name, node.line, node.column, repr(scope), self.file.line(node.line))
+                    ]).throw()
         else:
             name = self.eval(node.name, scope)
             f_scope = f.scope.merge(Scope(name, dict(zip([x.argument for x in f.parameters], [self.eval(arg, scope) for arg in node.args.items if arg]))))
@@ -173,6 +190,15 @@ class Interpreter:
                           ]).throw()
         return res
 
+    def eval_attribute(self, node, scope):
+        obj = self.eval(node.obj, scope)
+        res = obj.operate("GetAttr", String(node.attribute.argument))
+        if res is empty:
+            AttributeError(f"{obj.__class__.__name__!r} has no attribute {node.attribute.argument!r}", stack=[
+                StackCall(self.file.name, node.attribute.line, node.attribute.column, repr(scope), self.file.line(node.attribute.line))
+            ]).throw()
+        return res
+
     def eval(self, node=None, scope=None):
         if not node:
             node = self.node
@@ -235,6 +261,8 @@ class Interpreter:
             return self.eval_array(node, scope)
         elif isinstance(node, ast.Index):
             return self.eval_index(node, scope)
+        elif isinstance(node, ast.Attribute):
+            return self.eval_attribute(node, scope)
         else:
             raise builtins.RuntimeError("Unknown node")
 # todo: make stdlib operators, call stack, declaration operator.

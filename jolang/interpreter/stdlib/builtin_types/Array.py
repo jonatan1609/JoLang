@@ -1,5 +1,5 @@
 from .object import Object
-from .operator import Operator
+from .operator import Operator, Attribute
 
 
 class Array(Object):
@@ -13,5 +13,7 @@ class Array(Object):
             return self._obj[getattr(start, "_obj", None)]
         return Array(self._obj[getattr(start, "_obj", None):getattr(stop, "_obj", None):getattr(step, "_obj", None)])
 
-    def __str__(self):
-        return str(self._obj)
+    @Attribute("append")
+    def append(self, item):
+        self._obj.append(item)
+

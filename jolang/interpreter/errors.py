@@ -53,3 +53,7 @@ class OperatorError(Error):
 
 class RuntimeError(Error):
     pass
+
+
+class AttributeError(Error):
+    pass

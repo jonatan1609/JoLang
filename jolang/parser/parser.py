@@ -106,22 +106,26 @@ class Parser:
             elif self.accept(tokens.LeftBracket):
                 self.push_token_back()
                 node = self.parse_array()
-
-            while self.accept(tokens.LeftParen):
-                if self.accept(tokens.RightParen):
-                    node = ast.Call(self.current_token.line, self.current_token.col - 1, node, ast.Arguments(self.current_token.line, self.current_token.col, []))
-                else:
+            while isinstance(self.next_token, (tokens.LeftParen, tokens.LeftBracket, tokens.Dot)):
+                while self.accept(tokens.LeftParen):
+                    if self.accept(tokens.RightParen):
+                        node = ast.Call(self.current_token.line, self.current_token.col - 1, node, ast.Arguments(self.current_token.line, self.current_token.col, []))
+                    else:
+                        line, col = self.current_token.line, self.current_token.col
+                        args = self.parse_args()
+                        if not self.accept(tokens.RightParen):
+                            self.throw(f"Parenthesis were not closed")
+                        node = ast.Call(line, col, node, args)
+                while self.accept(tokens.LeftBracket):
                     line, col = self.current_token.line, self.current_token.col
-                    args = self.parse_args()
-                    if not self.accept(tokens.RightParen):
-                        raise SyntaxError(f"Parenthesis were not closed at line {self.current_token.line}")
-                    node = ast.Call(line, col, node, args)
-            while self.accept(tokens.LeftBracket):
-                line, col = self.current_token.line, self.current_token.col
-                self.push_token_back()
-                start, stop, step = self.parse_index()
-                node = ast.Index(line, col, start, stop, step, node)
-
+                    self.push_token_back()
+                    start, stop, step = self.parse_index()
+                    node = ast.Index(line, col, start, stop, step, node)
+                while self.accept(tokens.Dot):
+                    line, col = self.current_token.line, self.current_token.col
+                    if not self.accept(tokens.Identifier):
+                        self.throw("SyntaxError")
+                    node = ast.Attribute(line, col, node, ast.Name(self.current_token.line, self.current_token.col, self.current_token.content))
         if unary_op and not node.argument:
             self.current_token.col += 1
             self.throw(None)

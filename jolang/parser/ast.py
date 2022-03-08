@@ -50,6 +50,14 @@ class Container(Ast):
         self.items = items
 
 
+class Attribute(Ast):
+    def __init__(self, line, column, obj, attribute):
+        self.line = line
+        self.column = column
+        self.obj = obj
+        self.attribute = attribute
+
+
 class If(Ast):
     def __init__(self, line, column, condition, body, elifs, else_block):
         self.line = line
