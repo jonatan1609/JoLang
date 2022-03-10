@@ -34,9 +34,17 @@ class Parser:
     def __init__(self, stream: typing.Iterable[Token]):
         self.macros: typing.Dict[typing.Tuple[str, str], typing.List[tokens.Token]] = {}
         self.tokens_stream = self.cast_identifier_to_keyword(stream)
-        self.current_token: typing.Optional[Token] = None
+        self._current_token: typing.Optional[Token] = None
         self.next_token: typing.Optional[Token] = None
         self.advance()
+
+    @property
+    def current_token(self):
+        return self._current_token or self.next_token
+
+    @current_token.setter
+    def current_token(self, item):
+        self._current_token = item
 
     def advance(self) -> None:
         self.current_token, self.next_token = self.next_token, next(self.tokens_stream, None)
@@ -106,7 +114,7 @@ class Parser:
             elif self.accept(tokens.LeftBracket):
                 self.push_token_back()
                 node = self.parse_array()
-            while isinstance(self.next_token, (tokens.LeftParen, tokens.LeftBracket, tokens.Dot)):
+            while not self.is_eof() and isinstance(self.next_token, (tokens.LeftParen, tokens.LeftBracket, tokens.Dot)):
                 while self.accept(tokens.LeftParen):
                     if self.accept(tokens.RightParen):
                         node = ast.Call(self.current_token.line, self.current_token.col - 1, node, ast.Arguments(self.current_token.line, self.current_token.col, []))
