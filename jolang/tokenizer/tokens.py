@@ -79,6 +79,7 @@ LeftShift = Token('LEFT_SHIFT', '<<')
 RightShift = Token('RIGHT_SHIFT', '>>')
 InplaceLeftShift = Token('INPLACE_LEFT_SHIFT', '<<=')
 InplaceRightShift = Token('INPLACE_RIGHT_SHIFT', '>>=')
+Spaceship = Token('SPACESHIP', '<=>')
 
 
 groups = {1: {'!': LogicNot,
@@ -122,7 +123,7 @@ groups = {1: {'!': LogicNot,
    '^=': InplaceXor,
    '|=': InplaceBinOr,
    '||': LogicOr},
-3: {'<<=': InplaceLeftShift, '>>=': InplaceRightShift}}
+3: {'<<=': InplaceLeftShift, '<=>': Spaceship, '>>=': InplaceRightShift}}
 
 
 def one_char(char: str) -> typing.Optional[Token]:
