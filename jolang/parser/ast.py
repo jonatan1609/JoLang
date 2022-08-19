@@ -139,6 +139,7 @@ class LessEqual(Operator): pass
 class GreatEqual(Operator): pass
 class GreaterThan(Operator): pass
 class LesserThan(Operator): pass
+class Spaceship(Operator): pass
 class LogicOr(Operator): pass
 class LogicAnd(Operator): pass
 class Xor(Operator): pass

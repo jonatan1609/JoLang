@@ -20,6 +20,17 @@ class Integer(Object):
     def unary_tilde(self):
         return Integer(~self._obj)
 
+    @Operator("Spaceship", compatible=["Integer"])
+    def spaceship(self, other):
+        if self._obj > other._obj:
+            return Integer(1)
+
+        if self._obj < other._obj:
+            return Integer(-1)
+
+        return Integer(0)
+
+
     @Operator("InplaceAdd", compatible=["Integer"])
     @Operator("Add", compatible=["Integer"])
     def add(self, other):
@@ -93,7 +104,6 @@ class Integer(Object):
     @Operator("RightShift", compatible=["Integer"])
     def right_shift(self, other):
         return Integer(self._obj >> other._obj)
-
 
 class Float(Integer):
     pass

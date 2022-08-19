@@ -15,7 +15,8 @@ class Parser:
             tokens.LessEqual: ast.LessEqual,
             tokens.GreatEqual: ast.GreatEqual,
             tokens.LesserThan: ast.LesserThan,
-            tokens.GreaterThan: ast.GreaterThan
+            tokens.GreaterThan: ast.GreaterThan,
+            tokens.Spaceship: ast.Spaceship,
     }
     inplace_op_table = {
         tokens.Equals: ast.Assign,
@@ -140,11 +141,12 @@ class Parser:
         return node
 
     def parse_comp_op(self):
-        # CompOp: '==' | '!=' | '<=' | '>=' | '<' | '>'
+        # CompOp: '==' | '!=' | '<=' | '>=' | '<' | '>' | '<=>'
         for i, l in (
                 (tokens.IsEqual, 2), (tokens.NotEqual, 2),
                 (tokens.LessEqual, 2), (tokens.GreatEqual, 2),
                 (tokens.LesserThan, 1), (tokens.GreaterThan, 1),
+                (tokens.Spaceship, 3),
         ):
             if self.accept(i):
                 return self.comp_op_table[i], l
